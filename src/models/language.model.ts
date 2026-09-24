@@ -1,7 +1,4 @@
-export const LANGUAGES = [
-  "es", "en", "pt", "fr", "de", "it", "ca", "nl",
-  "ja", "zh", "ko", "hi", "ar", "ru", "tr", "pl",
-] as const;
+export const LANGUAGES = ["es", "en", "pt", "fr", "de", "it", "nl", "ja", "zh"] as const;
 
 export type Language = (typeof LANGUAGES)[number];
 export type SpokenLanguage = Language | "auto";
@@ -14,16 +11,9 @@ const LABELS: Record<SpokenLanguage, string> = {
   fr: "French",
   de: "German",
   it: "Italian",
-  ca: "Catalan",
   nl: "Dutch",
   ja: "Japanese",
   zh: "Chinese",
-  ko: "Korean",
-  hi: "Hindi",
-  ar: "Arabic",
-  ru: "Russian",
-  tr: "Turkish",
-  pl: "Polish",
 };
 
 export function languageLabel(value: SpokenLanguage): string {
@@ -49,5 +39,4 @@ export const SUBTITLE_OPTIONS: { value: string; label: string }[] = [
   { value: "en,pt", label: "English + Portuguese" },
   { value: "es,pt", label: "Spanish + Portuguese" },
   { value: "es,en", label: "Spanish + English" },
-  { value: "en,fr,pt", label: "English + French + Portuguese" },
 ];
