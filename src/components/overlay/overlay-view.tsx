@@ -10,6 +10,14 @@ export function OverlayView({ trackId }: { trackId: string }) {
   const only = params.get("only");
   const language = params.get("lang") as Language | null;
   const chroma = params.get("chroma") === "1";
+  const size = params.get("size") ?? "md";
+
+  const sizeClass =
+    size === "lg"
+      ? "text-[clamp(28px,4.6vw,64px)]"
+      : size === "sm"
+        ? "text-[clamp(16px,2.2vw,30px)]"
+        : "text-[clamp(22px,3.4vw,46px)]";
 
   const { views, status } = useTrackStream(trackId);
   const view = views[trackId];
@@ -34,13 +42,19 @@ export function OverlayView({ trackId }: { trackId: string }) {
 
       <div className="flex w-full max-w-[1500px] flex-col items-center gap-2 text-center">
         {only !== "translated" && spoken ? (
-          <p className="inline-block rounded-lg bg-black/80 px-6 py-3 text-[clamp(22px,3.4vw,46px)] leading-snug font-medium text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.75)]">
+          <p className={cn(
+              "inline-block rounded-lg bg-black/80 px-6 py-3 leading-snug font-medium text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.75)]",
+              sizeClass,
+            )}>
             {spoken}
           </p>
         ) : null}
 
         {only !== "original" && translated ? (
-          <p className="text-primary inline-block rounded-lg bg-black/80 px-6 py-3 text-[clamp(22px,3.4vw,46px)] leading-snug font-bold [text-shadow:0_2px_10px_rgba(0,0,0,0.75)]">
+          <p className={cn(
+              "text-primary inline-block rounded-lg bg-black/80 px-6 py-3 leading-snug font-bold [text-shadow:0_2px_10px_rgba(0,0,0,0.75)]",
+              sizeClass,
+            )}>
             {translated}
           </p>
         ) : null}

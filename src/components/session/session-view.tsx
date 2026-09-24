@@ -22,9 +22,15 @@ const FORMATS: { format: "srt" | "vtt" | "txt"; label: string }[] = [
   { format: "txt", label: "Text" },
 ];
 
-export function SessionView({ trackId }: { trackId: string }) {
+export function SessionView({
+  trackId,
+  initialLanguage,
+}: {
+  trackId: string;
+  initialLanguage?: Language | "";
+}) {
   const { view, status, language, available, chooseLanguage, visibleTranslations, downloadUrl } =
-    useSessionCaptions(trackId);
+    useSessionCaptions(trackId, initialLanguage);
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[1200px] flex-col px-4 pb-10 sm:px-6">

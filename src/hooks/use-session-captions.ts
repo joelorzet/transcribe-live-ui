@@ -8,20 +8,20 @@ import type { TranscriptFormat } from "@/services/transcript.service";
 
 const STORAGE_KEY = "transcribe-live.subtitle-language";
 
-export function useSessionCaptions(trackId: string) {
+export function useSessionCaptions(trackId: string, initialLanguage?: Language | "") {
   const { transcripts } = useServices();
   const { views, status } = useTrackStream(trackId);
-  const [language, setLanguage] = useState<Language | "">("");
+  const [language, setLanguage] = useState<Language | "">(initialLanguage ?? "");
 
   const view = views[trackId];
   const available = useMemo(() => view?.track.subtitleLanguages ?? [], [view]);
 
   useEffect(() => {
-    if (language !== "") return;
+    if (language !== "" || initialLanguage) return;
     const stored = window.localStorage.getItem(STORAGE_KEY) as Language | null;
     const next = stored && available.includes(stored) ? stored : available[0];
     if (next) setLanguage(next);
-  }, [available, language]);
+  }, [available, language, initialLanguage]);
 
   const chooseLanguage = useCallback((next: Language | "") => {
     setLanguage(next);

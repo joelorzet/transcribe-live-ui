@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { Download01, Eye, LayersTwo01, StopCircle, Trash01 } from "@untitledui/icons";
+import { Download01, Eye, Share07, StopCircle, Trash01 } from "@untitledui/icons";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { CaptionStack } from "@/components/captions/caption-stack";
@@ -11,7 +17,8 @@ import type { ReactNode } from "react";
 
 interface TrackCardProps {
   view: TrackView;
-  srtUrl: string;
+  downloads: { label: string; href: string }[];
+  outputs: ReactNode;
   isPending: boolean;
   onStop: () => void;
   onRemove: () => void;
@@ -20,7 +27,8 @@ interface TrackCardProps {
 
 export function TrackCard({
   view,
-  srtUrl,
+  downloads,
+  outputs,
   isPending,
   onStop,
   onRemove,
@@ -77,16 +85,21 @@ export function TrackCard({
             <Eye className="size-3.5" aria-hidden /> Captions
           </Link>
         </Button>
-        <Button asChild variant="outline" size="sm">
-          <Link href={`/overlay/${track.id}`} target="_blank">
-            <LayersTwo01 className="size-3.5" aria-hidden /> Overlay
-          </Link>
-        </Button>
-        <Button asChild variant="outline" size="sm">
-          <a href={srtUrl}>
-            <Download01 className="size-3.5" aria-hidden /> SRT
-          </a>
-        </Button>
+        {outputs}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Download01 className="size-3.5" aria-hidden /> Export
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {downloads.map((download) => (
+              <DropdownMenuItem key={download.label} asChild>
+                <a href={download.href}>{download.label}</a>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         {isRunning ? (
           <Button
             variant="ghost"

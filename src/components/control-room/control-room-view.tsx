@@ -9,6 +9,8 @@ import { TotalsGrid } from "@/components/control-room/totals-grid";
 import { CreateTrackForm } from "@/components/control-room/create-track-form";
 import { TrackCard } from "@/components/control-room/track-card";
 import { TrackSourceControl } from "@/components/control-room/track-source-control";
+import { TrackOutputsDialog } from "@/components/control-room/track-outputs-dialog";
+import { Share07 } from "@untitledui/icons";
 import { EmptyTracks } from "@/components/control-room/empty-tracks";
 
 export function ControlRoomView() {
@@ -41,7 +43,26 @@ export function ControlRoomView() {
                 <TrackCard
                   key={view.track.id}
                   view={view}
-                  srtUrl={transcriptUrl(view.track.id, "srt")}
+                  downloads={[
+                    { label: "Subtitles (.srt)", href: transcriptUrl(view.track.id, "srt") },
+                    { label: "WebVTT (.vtt)", href: transcriptUrl(view.track.id, "vtt") },
+                    { label: "Plain text (.txt)", href: transcriptUrl(view.track.id, "txt") },
+                    ...view.track.subtitleLanguages.map((code) => ({
+                      label: `Subtitles ${code.toUpperCase()} (.srt)`,
+                      href: transcriptUrl(view.track.id, "srt", code),
+                    })),
+                  ]}
+                  outputs={
+                    <TrackOutputsDialog
+                      trackId={view.track.id}
+                      trackTitle={view.track.title}
+                      subtitleLanguages={view.track.subtitleLanguages}
+                    >
+                      <Button variant="outline" size="sm">
+                        <Share07 className="size-3.5" aria-hidden /> Outputs
+                      </Button>
+                    </TrackOutputsDialog>
+                  }
                   isPending={pendingId === view.track.id}
                   onStop={() => void stop(view.track.id)}
                   onRemove={() => void remove(view.track.id)}
