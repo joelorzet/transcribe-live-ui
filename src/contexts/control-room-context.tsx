@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { useServices } from "@/contexts/services-context";
 import { useTrackStream, type TrackView } from "@/hooks/use-track-stream";
 import { EMPTY_TOTALS, type EventTotals } from "@/models/totals.model";
-import { isTrackRunning, type NewTrack } from "@/models/track.model";
+import { isTrackRunning, type NewTrack, type Track } from "@/models/track.model";
 import type { IngestStatus } from "@/models/ingest.model";
 import type { ConnectionStatus, EngineInfo, GlossaryOption } from "@/models/engine.model";
 import type { Language } from "@/models/language.model";
@@ -19,7 +19,7 @@ interface ControlRoomValue {
   status: ConnectionStatus;
   isCreating: boolean;
   ingests: Record<string, IngestStatus>;
-  createTrack: (input: NewTrack, mediaSource?: string) => Promise<void>;
+  createTrack: (input: NewTrack, mediaSource?: string) => Promise<Track>;
   startIngest: (trackId: string, source: string) => Promise<void>;
   startRtmpIngest: (trackId: string) => Promise<void>;
   stopIngest: (trackId: string) => Promise<void>;
@@ -127,12 +127,13 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
   );
 
   const createTrack = useCallback(
-    async (input: NewTrack, mediaSource?: string) => {
+    async (input: NewTrack, mediaSource?: string): Promise<Track> => {
       setIsCreating(true);
       try {
         const track = await sessions.create(input);
         upsert(track);
         if (mediaSource) await startIngest(track.id, mediaSource);
+        return track;
       } finally {
         setIsCreating(false);
       }

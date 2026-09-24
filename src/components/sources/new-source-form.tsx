@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Signal01 } from "@untitledui/icons";
+import { ArrowLeft, Clock, Play, Signal01 } from "@untitledui/icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,10 +18,32 @@ import { useCreateTrackForm } from "@/hooks/use-create-track-form";
 import { cn } from "@/lib/utils";
 import { LANGUAGES, SPOKEN_OPTIONS, languageLabel, type Language } from "@/models/language.model";
 
+const INPUT_METHODS = [
+  {
+    value: "pull" as const,
+    label: "Pull a URL",
+    hint: "YouTube, HLS or a media file",
+    icon: Play,
+  },
+  {
+    value: "obs" as const,
+    label: "OBS or vMix",
+    hint: "Your encoder publishes to us",
+    icon: Signal01,
+  },
+  {
+    value: "later" as const,
+    label: "Decide later",
+    hint: "Create it without audio",
+    icon: Clock,
+  },
+];
+
 export function NewSourceForm() {
   const { form, update, toggleOutput, submit, isCreating, glossaries } = useCreateTrackForm();
 
   const outputCandidates = LANGUAGES.filter((code) => code !== form.spokenLanguage);
+  const submitLabel = form.inputMethod === "obs" ? "Create and open endpoint" : "Start source";
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 pb-16 sm:px-6">
@@ -76,20 +98,64 @@ export function NewSourceForm() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="media">Audio source</Label>
-              <Input
-                id="media"
-                type="url"
-                placeholder="https://www.youtube.com/watch?v=…"
-                value={form.mediaSource}
-                onChange={(event) => update("mediaSource", event.target.value)}
-              />
-              <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
-                <Signal01 className="size-3.5" aria-hidden />
-                Leave empty to push from OBS instead. You can start an RTMP endpoint after creating
-                the source.
-              </p>
+            <div className="flex flex-col gap-3">
+              <Label>How audio reaches this source</Label>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {INPUT_METHODS.map((method) => {
+                  const selected = form.inputMethod === method.value;
+                  const Icon = method.icon;
+                  return (
+                    <button
+                      key={method.value}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => update("inputMethod", method.value)}
+                      className={cn(
+                        "flex cursor-pointer flex-col gap-1.5 rounded-lg border p-3 text-left transition-colors",
+                        selected
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-muted-foreground",
+                      )}
+                    >
+                      <span className="flex items-center gap-2 text-sm font-medium">
+                        <Icon className={cn("size-4", selected && "text-primary")} aria-hidden />
+                        {method.label}
+                      </span>
+                      <span className="text-muted-foreground text-xs">{method.hint}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {form.inputMethod === "pull" ? (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="media">Media URL</Label>
+                  <Input
+                    id="media"
+                    type="url"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    value={form.mediaSource}
+                    onChange={(event) => update("mediaSource", event.target.value)}
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    A YouTube link, an HLS playlist, or any media file the server can reach.
+                  </p>
+                </div>
+              ) : null}
+
+              {form.inputMethod === "obs" ? (
+                <p className="text-muted-foreground rounded-lg border border-dashed px-3 py-2.5 text-xs">
+                  An RTMP endpoint opens as soon as the source is created. The next screen gives you
+                  the Server and Stream Key to paste into OBS under Settings, Stream.
+                </p>
+              ) : null}
+
+              {form.inputMethod === "later" ? (
+                <p className="text-muted-foreground rounded-lg border border-dashed px-3 py-2.5 text-xs">
+                  The source is created without audio. Attach a URL or open an RTMP endpoint from its
+                  page whenever you are ready.
+                </p>
+              ) : null}
             </div>
           </CardContent>
         </Card>
@@ -151,7 +217,7 @@ export function NewSourceForm() {
 
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={isCreating}>
-            {isCreating ? "Starting…" : "Start source"}
+            {isCreating ? "Starting" : submitLabel}
           </Button>
           <Button asChild type="button" variant="ghost">
             <Link href="/">Cancel</Link>
