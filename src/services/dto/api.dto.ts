@@ -122,6 +122,8 @@ export interface IngestStatusDto {
   pushUrl?: string;
   server?: string;
   streamKey?: string;
+  startSeconds?: number;
+  positionSeconds?: number;
 }
 
 export interface StartIngestDto {

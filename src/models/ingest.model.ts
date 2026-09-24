@@ -10,4 +10,8 @@ export interface IngestStatus {
   pushUrl?: string;
   server?: string;
   streamKey?: string;
+  /** Where in the source the ingest began. */
+  startSeconds?: number;
+  /** Where the server currently is in the source. Subtitles describe this moment. */
+  positionSeconds?: number;
 }

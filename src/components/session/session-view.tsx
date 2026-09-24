@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CaptionStack } from "@/components/captions/caption-stack";
+import { VideoStage } from "@/components/audience/video-stage";
+import { toEmbeddableVideo } from "@/lib/video";
 import { ConnectionBadge, TrackStatusBadge } from "@/components/control-room/status-badge";
 import { useSessionCaptions } from "@/hooks/use-session-captions";
 import type { Language } from "@/models/language.model";
@@ -32,12 +34,15 @@ export function SessionView({
   const { view, status, language, available, chooseLanguage, visibleTranslations, downloadUrl } =
     useSessionCaptions(trackId, initialLanguage);
 
+  const video = toEmbeddableVideo(view?.track.input?.source);
+  const translatedText = language ? (visibleTranslations[language] ?? "") : "";
+
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[1200px] flex-col px-4 pb-10 sm:px-6">
       <header className="bg-background/90 sticky top-0 z-30 mb-6 flex flex-wrap items-center gap-3 border-b py-4 backdrop-blur">
         <Button asChild variant="ghost" size="sm">
-          <Link href="/">
-            <ArrowLeft className="size-4" aria-hidden /> Control room
+          <Link href="/live">
+            <ArrowLeft className="size-4" aria-hidden /> All talks
           </Link>
         </Button>
         <span className="truncate font-semibold">{view?.track.title ?? trackId}</span>
@@ -69,13 +74,27 @@ export function SessionView({
         <ConnectionBadge status={status} />
       </header>
 
-      <main className="flex flex-1 flex-col justify-end pb-6">
-        <CaptionStack
-          interim={view?.interim ?? ""}
-          original={view?.original ?? ""}
-          translations={visibleTranslations}
-          size="stage"
-        />
+      <main className="flex flex-1 flex-col justify-center gap-6 pb-6">
+        {video ? (
+          <VideoStage
+            video={video}
+            title={view?.track.title ?? "Live talk"}
+            original={view?.original ?? ""}
+            interim={view?.interim ?? ""}
+            translated={translatedText}
+            showOriginal={!language}
+            serverPositionSeconds={view?.track.input?.positionSeconds}
+          />
+        ) : (
+          <div className="flex flex-1 flex-col justify-end">
+            <CaptionStack
+              interim={view?.interim ?? ""}
+              original={view?.original ?? ""}
+              translations={visibleTranslations}
+              size="stage"
+            />
+          </div>
+        )}
       </main>
 
       {view && view.history.length > 0 ? (
