@@ -78,7 +78,6 @@ export function SessionView({
         {video ? (
           <VideoStage
             video={video}
-            title={view?.track.title ?? "Live talk"}
             original={view?.original ?? ""}
             interim={view?.interim ?? ""}
             translated={translatedText}

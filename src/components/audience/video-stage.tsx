@@ -9,7 +9,6 @@ import type { EmbeddableVideo } from "@/lib/video";
 
 interface VideoStageProps {
   video: EmbeddableVideo;
-  title: string;
   original: string;
   interim: string;
   translated: string;
@@ -19,7 +18,6 @@ interface VideoStageProps {
 
 export function VideoStage({
   video,
-  title,
   original,
   interim,
   translated,

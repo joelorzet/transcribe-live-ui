@@ -57,7 +57,9 @@ export function useSyncedPlayer(videoId: string, serverPositionSeconds: number |
   const [isPlaying, setIsPlaying] = useState(false);
   const [driftSeconds, setDriftSeconds] = useState(0);
 
-  positionRef.current = serverPositionSeconds;
+  useEffect(() => {
+    positionRef.current = serverPositionSeconds;
+  }, [serverPositionSeconds]);
 
   useEffect(() => {
     let cancelled = false;
