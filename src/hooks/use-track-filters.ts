@@ -6,6 +6,8 @@ import {
   EMPTY_FILTERS,
   hasActiveFilters,
   matchesFilters,
+  toggleValue,
+  type FilterGroupKey,
   type SourceKind,
   type TrackFilters,
 } from "@/models/filters.model";
@@ -15,8 +17,19 @@ export function useTrackFilters() {
   const { tracks, ingests } = useControlRoom();
   const [filters, setFilters] = useState<TrackFilters>(EMPTY_FILTERS);
 
-  const update = useCallback(<K extends keyof TrackFilters>(key: K, value: TrackFilters[K]) => {
-    setFilters((current) => ({ ...current, [key]: value }));
+  const setQuery = useCallback((query: string) => {
+    setFilters((current) => ({ ...current, query }));
+  }, []);
+
+  const toggle = useCallback((group: FilterGroupKey, value: string) => {
+    setFilters((current) => ({
+      ...current,
+      [group]: toggleValue(current[group] as string[], value),
+    }));
+  }, []);
+
+  const clearGroup = useCallback((group: FilterGroupKey) => {
+    setFilters((current) => ({ ...current, [group]: [] }));
   }, []);
 
   const reset = useCallback(() => setFilters(EMPTY_FILTERS), []);
@@ -46,7 +59,9 @@ export function useTrackFilters() {
 
   return {
     filters,
-    update,
+    setQuery,
+    toggle,
+    clearGroup,
     reset,
     visible,
     inputLanguages,

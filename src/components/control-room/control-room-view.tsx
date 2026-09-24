@@ -14,8 +14,18 @@ import { EmptyTracks } from "@/components/control-room/empty-tracks";
 
 export function ControlRoomView() {
   const { tracks, totals, engine, engineError, status, transcriptUrl } = useControlRoom();
-  const { filters, update, reset, visible, inputLanguages, outputLanguages: outputCodes, isFiltered, total } =
-    useTrackFilters();
+  const {
+    filters,
+    setQuery,
+    toggle,
+    clearGroup,
+    reset,
+    visible,
+    inputLanguages,
+    outputLanguages: outputCodes,
+    isFiltered,
+    total,
+  } = useTrackFilters();
   const { stop, remove, clearEnded, pendingId, isClearing } = useTrackActions();
 
   return (
@@ -52,7 +62,9 @@ export function ControlRoomView() {
           </div>
           <TrackFiltersBar
             filters={filters}
-            update={update}
+            setQuery={setQuery}
+            toggle={toggle}
+            clearGroup={clearGroup}
             reset={reset}
             isFiltered={isFiltered}
             inputLanguages={inputLanguages}

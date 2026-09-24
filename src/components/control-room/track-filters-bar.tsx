@@ -6,16 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { languageLabel, type Language, type SpokenLanguage } from "@/models/language.model";
-import type { SourceKind, TrackFilters } from "@/models/filters.model";
+import { groupState, type FilterGroupKey, type SourceKind, type TrackFilters } from "@/models/filters.model";
 import type { TrackStatus } from "@/models/track.model";
 
 interface Option {
@@ -25,7 +25,9 @@ interface Option {
 
 interface TrackFiltersBarProps {
   filters: TrackFilters;
-  update: <K extends keyof TrackFilters>(key: K, value: TrackFilters[K]) => void;
+  setQuery: (query: string) => void;
+  toggle: (group: FilterGroupKey, value: string) => void;
+  clearGroup: (group: FilterGroupKey) => void;
   reset: () => void;
   isFiltered: boolean;
   inputLanguages: SpokenLanguage[];
@@ -50,36 +52,73 @@ const SOURCE_OPTIONS: Option[] = [
 function FilterGroup({
   label,
   options,
-  value,
-  onSelect,
+  selected,
+  onToggle,
+  onSelectAll,
 }: {
   label: string;
   options: Option[];
-  value: string;
-  onSelect: (next: string) => void;
+  selected: string[];
+  onToggle: (value: string) => void;
+  onSelectAll: () => void;
 }) {
+  if (options.length === 0) return null;
+
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger>{label}</DropdownMenuSubTrigger>
-      <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
-        <DropdownMenuRadioGroup value={value} onValueChange={onSelect}>
-          <DropdownMenuRadioItem value="all">All</DropdownMenuRadioItem>
-          {options.map((option) => (
-            <DropdownMenuRadioItem key={option.value} value={option.value}>
-              {option.label}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
+      <DropdownMenuSubTrigger>
+        {label}
+        {selected.length > 0 ? (
+          <span className="text-muted-foreground ml-auto pl-3 font-mono text-xs">
+            {selected.length}
+          </span>
+        ) : null}
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent className="max-h-72 w-48 overflow-y-auto">
+        <DropdownMenuCheckboxItem
+          checked={groupState(selected, options.length)}
+          onSelect={(event) => {
+            event.preventDefault();
+            onSelectAll();
+          }}
+        >
+          All
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuSeparator />
+        {options.map((option) => (
+          <DropdownMenuCheckboxItem
+            key={option.value}
+            checked={selected.includes(option.value)}
+            onSelect={(event) => {
+              event.preventDefault();
+              onToggle(option.value);
+            }}
+          >
+            {option.label}
+          </DropdownMenuCheckboxItem>
+        ))}
       </DropdownMenuSubContent>
     </DropdownMenuSub>
   );
 }
 
-function FilterChip({ label, value, onClear }: { label: string; value: string; onClear: () => void }) {
+function FilterChip({
+  label,
+  values,
+  onClear,
+}: {
+  label: string;
+  values: string[];
+  onClear: () => void;
+}) {
+  if (values.length === 0) return null;
+
   return (
     <Badge variant="outline" className="gap-1.5 py-1 pr-1 pl-2.5 text-xs font-normal">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium">{value}</span>
+      <span className="font-medium">
+        {values.length <= 2 ? values.join(", ") : `${values.length} selected`}
+      </span>
       <button
         type="button"
         aria-label={`Clear ${label} filter`}
@@ -94,7 +133,9 @@ function FilterChip({ label, value, onClear }: { label: string; value: string; o
 
 export function TrackFiltersBar({
   filters,
-  update,
+  setQuery,
+  toggle,
+  clearGroup,
   reset,
   isFiltered,
   inputLanguages,
@@ -111,8 +152,8 @@ export function TrackFiltersBar({
     label: languageLabel(code),
   }));
 
-  const labelFor = (options: Option[], value: string) =>
-    options.find((option) => option.value === value)?.label ?? value;
+  const labelsFor = (options: Option[], selected: string[]) =>
+    selected.map((value) => options.find((option) => option.value === value)?.label ?? value);
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -126,7 +167,7 @@ export function TrackFiltersBar({
           placeholder="Search sources"
           className="h-9 pl-9 text-sm"
           value={filters.query}
-          onChange={(event) => update("query", event.target.value)}
+          onChange={(event) => setQuery(event.target.value)}
         />
       </div>
 
@@ -136,62 +177,58 @@ export function TrackFiltersBar({
             <FilterLines className="size-3.5" aria-hidden /> Filters
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuContent align="end" className="w-48">
           <FilterGroup
             label="Status"
             options={STATUS_OPTIONS}
-            value={filters.status}
-            onSelect={(next) => update("status", next as TrackStatus | "all")}
+            selected={filters.statuses}
+            onToggle={(value) => toggle("statuses", value as TrackStatus)}
+            onSelectAll={() => clearGroup("statuses")}
           />
           <FilterGroup
-            label="Input language"
+            label="Input"
             options={inputOptions}
-            value={filters.inputLanguage}
-            onSelect={(next) => update("inputLanguage", next as SpokenLanguage | "all")}
+            selected={filters.inputLanguages}
+            onToggle={(value) => toggle("inputLanguages", value as SpokenLanguage)}
+            onSelectAll={() => clearGroup("inputLanguages")}
           />
           <FilterGroup
-            label="Output language"
+            label="Output"
             options={outputOptions}
-            value={filters.outputLanguage}
-            onSelect={(next) => update("outputLanguage", next as Language | "all")}
+            selected={filters.outputLanguages}
+            onToggle={(value) => toggle("outputLanguages", value as Language)}
+            onSelectAll={() => clearGroup("outputLanguages")}
           />
           <FilterGroup
             label="Source"
             options={SOURCE_OPTIONS}
-            value={filters.sourceKind}
-            onSelect={(next) => update("sourceKind", next as SourceKind | "all")}
+            selected={filters.sourceKinds}
+            onToggle={(value) => toggle("sourceKinds", value as SourceKind)}
+            onSelectAll={() => clearGroup("sourceKinds")}
           />
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {filters.status !== "all" ? (
-        <FilterChip
-          label="Status"
-          value={labelFor(STATUS_OPTIONS, filters.status)}
-          onClear={() => update("status", "all")}
-        />
-      ) : null}
-      {filters.inputLanguage !== "all" ? (
-        <FilterChip
-          label="Input"
-          value={labelFor(inputOptions, filters.inputLanguage)}
-          onClear={() => update("inputLanguage", "all")}
-        />
-      ) : null}
-      {filters.outputLanguage !== "all" ? (
-        <FilterChip
-          label="Output"
-          value={labelFor(outputOptions, filters.outputLanguage)}
-          onClear={() => update("outputLanguage", "all")}
-        />
-      ) : null}
-      {filters.sourceKind !== "all" ? (
-        <FilterChip
-          label="Source"
-          value={labelFor(SOURCE_OPTIONS, filters.sourceKind)}
-          onClear={() => update("sourceKind", "all")}
-        />
-      ) : null}
+      <FilterChip
+        label="Status"
+        values={labelsFor(STATUS_OPTIONS, filters.statuses)}
+        onClear={() => clearGroup("statuses")}
+      />
+      <FilterChip
+        label="Input"
+        values={labelsFor(inputOptions, filters.inputLanguages)}
+        onClear={() => clearGroup("inputLanguages")}
+      />
+      <FilterChip
+        label="Output"
+        values={labelsFor(outputOptions, filters.outputLanguages)}
+        onClear={() => clearGroup("outputLanguages")}
+      />
+      <FilterChip
+        label="Source"
+        values={labelsFor(SOURCE_OPTIONS, filters.sourceKinds)}
+        onClear={() => clearGroup("sourceKinds")}
+      />
 
       {isFiltered ? (
         <>
