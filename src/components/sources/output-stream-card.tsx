@@ -1,6 +1,7 @@
 "use client";
 
-import { Copy01, LinkExternal01, XClose } from "@untitledui/icons";
+import { Link03, XClose } from "@untitledui/icons";
+import { OutputConnectDialog } from "@/components/sources/output-connect-dialog";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,27 +11,19 @@ import { languageLabel, type Language } from "@/models/language.model";
 import type { TrackOutput } from "@/models/track.model";
 
 interface OutputStreamCardProps {
-  output: TrackOutput;
+  output: TrackOutput & { trackId: string };
   text: string;
-  overlayUrl: string;
-  audienceUrl: string;
-  srtUrl: string;
   canRemove: boolean;
   isPending: boolean;
   onRemove: () => void;
-  onCopy: (url: string, label: string) => void;
 }
 
 export function OutputStreamCard({
   output,
   text,
-  overlayUrl,
-  audienceUrl,
-  srtUrl,
   canRemove,
   isPending,
   onRemove,
-  onCopy,
 }: OutputStreamCardProps) {
   return (
     <Card className="gap-0 overflow-hidden py-0">
@@ -70,18 +63,13 @@ export function OutputStreamCard({
         )}
       </CardContent>
 
-      <div className="flex flex-wrap gap-2 border-t px-4 py-3">
-        <Button variant="outline" size="sm" onClick={() => onCopy(overlayUrl, "Overlay URL")}>
-          <Copy01 className="size-3.5" aria-hidden /> Overlay URL
-        </Button>
-        <Button asChild variant="ghost" size="sm">
-          <a href={audienceUrl} target="_blank" rel="noopener noreferrer">
-            <LinkExternal01 className="size-3.5" aria-hidden /> Audience
-          </a>
-        </Button>
-        <Button asChild variant="ghost" size="sm">
-          <a href={srtUrl}>SRT</a>
-        </Button>
+      <div className="flex flex-wrap items-center gap-2 border-t px-4 py-3">
+        <OutputConnectDialog trackId={output.trackId} language={output.language as Language}>
+          <Button variant="outline" size="sm">
+            <Link03 className="size-3.5" aria-hidden /> Connect this stream
+          </Button>
+        </OutputConnectDialog>
+        <span className="text-muted-foreground text-xs">OBS, audience page, WebSocket or SRT</span>
       </div>
     </Card>
   );

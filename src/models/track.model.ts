@@ -1,4 +1,5 @@
 import type { Language, SpokenLanguage } from "@/models/language.model";
+import type { IngestStatus } from "@/models/ingest.model";
 
 export type TrackStatus = "starting" | "live" | "ended" | "error";
 
@@ -36,6 +37,7 @@ export interface Track {
   status: TrackStatus;
   spokenLanguage: SpokenLanguage;
   outputs: TrackOutput[];
+  input: IngestStatus | null;
   glossaryId: string;
   createdAt: number;
   metrics: TrackMetrics;

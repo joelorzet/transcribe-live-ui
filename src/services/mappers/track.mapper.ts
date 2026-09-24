@@ -18,6 +18,7 @@ export class TrackMapper {
       status: dto.status,
       spokenLanguage: toSpokenLanguage(dto.sourceLanguage),
       outputs: (dto.outputs ?? []).map((output) => TrackMapper.outputFromDto(output)),
+      input: dto.input ? { ...dto.input, trackId: dto.id } : null,
       glossaryId: dto.glossaryId,
       createdAt: dto.createdAt,
       errorMessage: dto.error,

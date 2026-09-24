@@ -5,11 +5,11 @@ import { toast } from "sonner";
 import { useControlRoom } from "@/contexts/control-room-context";
 
 export function useTrackSource(trackId: string) {
-  const { ingests, startIngest, startRtmpIngest, stopIngest } = useControlRoom();
+  const { tracks, startIngest, startRtmpIngest, stopIngest } = useControlRoom();
   const [value, setValue] = useState("");
   const [isBusy, setIsBusy] = useState(false);
 
-  const ingest = ingests[trackId];
+  const ingest = tracks.find((view) => view.track.id === trackId)?.track.input ?? null;
 
   const start = useCallback(async () => {
     const source = value.trim();

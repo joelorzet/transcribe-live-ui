@@ -5,7 +5,6 @@ import { useServices } from "@/contexts/services-context";
 import { useTrackStream, type TrackView } from "@/hooks/use-track-stream";
 import { EMPTY_TOTALS, type EventTotals } from "@/models/totals.model";
 import { isTrackRunning, type NewTrack, type Track } from "@/models/track.model";
-import type { IngestStatus } from "@/models/ingest.model";
 import type { ConnectionStatus, EngineInfo, GlossaryOption } from "@/models/engine.model";
 import type { Language } from "@/models/language.model";
 import type { TranscriptFormat } from "@/services/transcript.service";
@@ -18,7 +17,6 @@ interface ControlRoomValue {
   glossaries: GlossaryOption[];
   status: ConnectionStatus;
   isCreating: boolean;
-  ingests: Record<string, IngestStatus>;
   createTrack: (input: NewTrack, mediaSource?: string) => Promise<Track>;
   startIngest: (trackId: string, source: string) => Promise<void>;
   startRtmpIngest: (trackId: string) => Promise<void>;
@@ -69,7 +67,6 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
   const [engineError, setEngineError] = useState<string | null>(null);
   const [glossaries, setGlossaries] = useState<GlossaryOption[]>([]);
   const [isCreating, setIsCreating] = useState(false);
-  const [ingests, setIngests] = useState<Record<string, IngestStatus>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -100,16 +97,14 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
 
   const startIngest = useCallback(
     async (trackId: string, source: string) => {
-      const status = await ingest.start(trackId, { source });
-      setIngests((current) => ({ ...current, [trackId]: status }));
+      await ingest.start(trackId, { source });
     },
     [ingest],
   );
 
   const startRtmpIngest = useCallback(
     async (trackId: string) => {
-      const status = await ingest.startRtmp(trackId);
-      setIngests((current) => ({ ...current, [trackId]: status }));
+      await ingest.startRtmp(trackId);
     },
     [ingest],
   );
@@ -117,11 +112,6 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
   const stopIngest = useCallback(
     async (trackId: string) => {
       await ingest.stop(trackId);
-      setIngests((current) => {
-        const next = { ...current };
-        delete next[trackId];
-        return next;
-      });
     },
     [ingest],
   );
@@ -144,22 +134,12 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
   const stopTrack = useCallback(
     async (trackId: string) => {
       await ingest.stop(trackId).catch(() => undefined);
-      setIngests((current) => {
-        const next = { ...current };
-        delete next[trackId];
-        return next;
-      });
       upsert(await sessions.stop(trackId));
     },
     [sessions, upsert, ingest],
   );
 
   const dropTrack = useCallback((trackId: string) => {
-    setIngests((current) => {
-      const next = { ...current };
-      delete next[trackId];
-      return next;
-    });
     removeFromStream(trackId);
   }, [removeFromStream]);
 
@@ -222,7 +202,6 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
       glossaries,
       status,
       isCreating,
-      ingests,
       createTrack,
       startIngest,
       startRtmpIngest,
@@ -243,7 +222,6 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
       glossaries,
       status,
       isCreating,
-      ingests,
       createTrack,
       startIngest,
       startRtmpIngest,

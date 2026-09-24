@@ -14,7 +14,7 @@ import {
 import type { Language, SpokenLanguage } from "@/models/language.model";
 
 export function useTrackFilters() {
-  const { tracks, ingests } = useControlRoom();
+  const { tracks } = useControlRoom();
   const [filters, setFilters] = useState<TrackFilters>(EMPTY_FILTERS);
 
   const setQuery = useCallback((query: string) => {
@@ -35,8 +35,9 @@ export function useTrackFilters() {
   const reset = useCallback(() => setFilters(EMPTY_FILTERS), []);
 
   const sourceKindOf = useCallback(
-    (trackId: string): SourceKind => ingests[trackId]?.kind ?? "none",
-    [ingests],
+    (trackId: string): SourceKind =>
+      tracks.find((view) => view.track.id === trackId)?.track.input?.kind ?? "none",
+    [tracks],
   );
 
   const visible = useMemo(

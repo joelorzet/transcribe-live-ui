@@ -32,6 +32,7 @@ export interface SessionSnapshotDto {
   sourceLanguage: string;
   targetLanguages: string[];
   outputs: OutputDto[];
+  input: IngestStatusDto | null;
   glossaryId: string;
   createdAt: number;
   startedAt?: number;

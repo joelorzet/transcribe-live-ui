@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowLeft, Plus, RefreshCw01, StopCircle, Trash01 } from "@untitledui/icons";
 import { Button } from "@/components/ui/button";
@@ -17,11 +16,11 @@ import { TrackStatusBadge } from "@/components/control-room/status-badge";
 import { SourceInputPanel } from "@/components/sources/source-input-panel";
 import { SourceSettingsRow } from "@/components/sources/source-settings-row";
 import { OutputStreamCard } from "@/components/sources/output-stream-card";
+import { StreamEndpointsPanel } from "@/components/sources/stream-endpoints-panel";
 import { useControlRoom } from "@/contexts/control-room-context";
 import { useTrackOutputsManager } from "@/hooks/use-track-outputs-manager";
 import { useTrackActions } from "@/hooks/use-track-actions";
 import { formatDuration, formatLatency, formatUsd } from "@/lib/format";
-import { buildAudienceUrl, buildOverlayUrl } from "@/models/output.model";
 import { languageLabel, type Language } from "@/models/language.model";
 import type { TrackView } from "@/hooks/use-track-stream";
 
@@ -69,13 +68,8 @@ export function SourceDetailView({ trackId }: { trackId: string }) {
 
 function SourceDetailBody({ view }: { view: TrackView }) {
   const { track } = view;
-  const { transcriptUrl } = useControlRoom();
   const { stop, remove, restart, pendingId } = useTrackActions();
   const { available, add, remove: removeOutput, pendingLanguage } = useTrackOutputsManager(track);
-  const [origin, setOrigin] = useState("");
-
-  useEffect(() => setOrigin(window.location.origin), []);
-
   const isRunning = track.status === "live" || track.status === "starting";
   const canEditOutputs = track.status !== "ended";
   const isPending = pendingId === track.id;
@@ -229,25 +223,18 @@ function SourceDetailBody({ view }: { view: TrackView }) {
             {track.outputs.map((output) => (
               <OutputStreamCard
                 key={output.language}
-                output={output}
+                output={{ ...output, trackId: track.id }}
                 text={view.translations[output.language as Language] ?? ""}
-                overlayUrl={buildOverlayUrl(origin, track.id, {
-                  language: output.language as Language,
-                  content: "translated",
-                  chromaKey: false,
-                  size: "md",
-                })}
-                audienceUrl={buildAudienceUrl(origin, track.id, output.language as Language)}
-                srtUrl={transcriptUrl(track.id, "srt", output.language as Language)}
                 canRemove={canEditOutputs}
                 isPending={pendingLanguage === output.language}
                 onRemove={() => void removeOutput(output.language as Language)}
-                onCopy={copy}
               />
             ))}
           </div>
         )}
       </section>
+
+      <StreamEndpointsPanel trackId={track.id} outputs={track.outputs} />
     </div>
   );
 }
