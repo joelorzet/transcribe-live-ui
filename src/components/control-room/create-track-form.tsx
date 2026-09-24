@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { useCreateTrackForm } from "@/hooks/use-create-track-form";
 import { SPOKEN_OPTIONS, SUBTITLE_OPTIONS } from "@/models/language.model";
+import { GlossaryDialog } from "@/components/control-room/glossary-dialog";
 
 export function CreateTrackForm() {
   const { form, update, submit, isCreating, glossaries } = useCreateTrackForm();
@@ -96,7 +97,10 @@ export function CreateTrackForm() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="glossary">Glossary</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="glossary">Glossary</Label>
+              <GlossaryDialog glossaryId={form.glossaryId} />
+            </div>
             <Select value={form.glossaryId} onValueChange={(value) => update("glossaryId", value)}>
               <SelectTrigger id="glossary" className="w-full">
                 <SelectValue />
@@ -109,6 +113,9 @@ export function CreateTrackForm() {
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-muted-foreground text-xs">
+              Terms the speech model should recognise and the translator must not mangle.
+            </p>
           </div>
 
           <Button type="submit" disabled={isCreating} className="w-full lg:col-span-5 xl:w-auto">

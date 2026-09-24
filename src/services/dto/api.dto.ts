@@ -109,3 +109,16 @@ export interface StartIngestDto {
   startSeconds?: number;
   durationSeconds?: number;
 }
+
+export interface GlossaryTermDto {
+  term: string;
+  keepVerbatim?: boolean;
+  translations?: Record<string, string>;
+}
+
+export interface GlossaryDetailDto {
+  id: string;
+  name: string;
+  description?: string;
+  terms: GlossaryTermDto[];
+}
