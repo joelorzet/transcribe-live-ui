@@ -20,9 +20,19 @@ export class SessionService {
   }
 
   async stop(trackId: string): Promise<Track> {
-    const dto = await this.http.delete<SessionSnapshotDto>(
-      `/api/sessions/${encodeURIComponent(trackId)}`,
+    const dto = await this.http.post<SessionSnapshotDto>(
+      `/api/sessions/${encodeURIComponent(trackId)}/stop`,
+      {},
     );
     return TrackMapper.fromDtoToModel(dto);
+  }
+
+  async remove(trackId: string): Promise<void> {
+    await this.http.delete<{ removed: true }>(`/api/sessions/${encodeURIComponent(trackId)}`);
+  }
+
+  async removeEnded(): Promise<number> {
+    const { removed } = await this.http.delete<{ removed: number }>("/api/sessions/ended");
+    return removed;
   }
 }

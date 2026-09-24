@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Download01, Eye, LayersTwo01, StopCircle } from "@untitledui/icons";
+import { Download01, Eye, LayersTwo01, StopCircle, Trash01 } from "@untitledui/icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { CaptionStack } from "@/components/captions/caption-stack";
@@ -7,15 +7,25 @@ import { TrackStatusBadge } from "@/components/control-room/status-badge";
 import { formatDuration, formatLatency, formatUsd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { TrackView } from "@/hooks/use-track-stream";
+import type { ReactNode } from "react";
 
 interface TrackCardProps {
   view: TrackView;
   srtUrl: string;
-  isStopping: boolean;
+  isPending: boolean;
   onStop: () => void;
+  onRemove: () => void;
+  sourceControl?: ReactNode;
 }
 
-export function TrackCard({ view, srtUrl, isStopping, onStop }: TrackCardProps) {
+export function TrackCard({
+  view,
+  srtUrl,
+  isPending,
+  onStop,
+  onRemove,
+  sourceControl,
+}: TrackCardProps) {
   const { track } = view;
   const isRunning = track.status === "live" || track.status === "starting";
 
@@ -46,6 +56,10 @@ export function TrackCard({ view, srtUrl, isStopping, onStop }: TrackCardProps) 
         />
       </CardContent>
 
+      {sourceControl && isRunning ? (
+        <div className="border-t px-4 py-2.5">{sourceControl}</div>
+      ) : null}
+
       <div className="bg-border grid grid-cols-2 gap-px border-y sm:grid-cols-4">
         {metrics.map((metric) => (
           <div key={metric.label} className="bg-card px-3 py-2">
@@ -73,15 +87,27 @@ export function TrackCard({ view, srtUrl, isStopping, onStop }: TrackCardProps) 
             <Download01 className="size-3.5" aria-hidden /> SRT
           </a>
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-muted-foreground hover:text-destructive ml-auto"
-          disabled={!isRunning || isStopping}
-          onClick={onStop}
-        >
-          <StopCircle className="size-3.5" aria-hidden /> Stop
-        </Button>
+        {isRunning ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-destructive ml-auto"
+            disabled={isPending}
+            onClick={onStop}
+          >
+            <StopCircle className="size-3.5" aria-hidden /> {isPending ? "Stopping…" : "Stop"}
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-destructive ml-auto"
+            disabled={isPending}
+            onClick={onRemove}
+          >
+            <Trash01 className="size-3.5" aria-hidden /> {isPending ? "Removing…" : "Remove"}
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

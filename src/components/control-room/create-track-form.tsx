@@ -58,6 +58,19 @@ export function CreateTrackForm() {
             />
           </div>
 
+          <div className="flex flex-col gap-2 sm:col-span-2 lg:col-span-3">
+            <Label htmlFor="media-source">
+              Audio source <span className="text-muted-foreground">— YouTube or media URL</span>
+            </Label>
+            <Input
+              id="media-source"
+              type="url"
+              placeholder="https://www.youtube.com/watch?v=…  (leave empty to stream audio yourself)"
+              value={form.mediaSource}
+              onChange={(event) => update("mediaSource", event.target.value)}
+            />
+          </div>
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="spoken">Spoken</Label>
             <Select

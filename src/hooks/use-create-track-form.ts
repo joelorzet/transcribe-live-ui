@@ -11,6 +11,7 @@ interface FormState {
   spokenLanguage: SpokenLanguage;
   subtitleLanguages: string;
   glossaryId: string;
+  mediaSource: string;
 }
 
 const INITIAL: FormState = {
@@ -18,6 +19,7 @@ const INITIAL: FormState = {
   spokenLanguage: "es",
   subtitleLanguages: "en",
   glossaryId: "nerdearla",
+  mediaSource: "",
 };
 
 export function useCreateTrackForm() {
@@ -40,15 +42,22 @@ export function useCreateTrackForm() {
       .map((code) => toLanguage(code.trim()))
       .filter((code, index, all): code is Language => all.indexOf(code) === index);
 
+    const mediaSource = form.mediaSource.trim();
+
     try {
-      await createTrack({
-        title,
-        spokenLanguage: toSpokenLanguage(form.spokenLanguage),
-        subtitleLanguages,
-        glossaryId: form.glossaryId,
-      });
-      setForm((current) => ({ ...current, title: "" }));
-      toast.success(`"${title}" is live`);
+      await createTrack(
+        {
+          title,
+          spokenLanguage: toSpokenLanguage(form.spokenLanguage),
+          subtitleLanguages,
+          glossaryId: form.glossaryId,
+        },
+        mediaSource || undefined,
+      );
+      setForm((current) => ({ ...current, title: "", mediaSource: "" }));
+      toast.success(
+        mediaSource ? `"${title}" is live and pulling audio` : `"${title}" is live, waiting for audio`,
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not start the track");
     }

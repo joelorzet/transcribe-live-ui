@@ -96,3 +96,16 @@ export interface CreateSessionDto {
   targetLanguages: string;
   glossaryId: string;
 }
+
+export interface IngestStatusDto {
+  trackId: string;
+  source: string;
+  secondsIngested: number;
+  startedAt: number;
+}
+
+export interface StartIngestDto {
+  source: string;
+  startSeconds?: number;
+  durationSeconds?: number;
+}

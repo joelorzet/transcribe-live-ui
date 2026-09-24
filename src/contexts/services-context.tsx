@@ -8,6 +8,7 @@ import { GlossaryService } from "@/services/glossary.service";
 import { HealthService } from "@/services/health.service";
 import { TranscriptService } from "@/services/transcript.service";
 import { RealtimeService } from "@/services/realtime.service";
+import { IngestService } from "@/services/ingest.service";
 
 export interface Services {
   sessions: SessionService;
@@ -15,6 +16,7 @@ export interface Services {
   health: HealthService;
   transcripts: TranscriptService;
   realtime: RealtimeService;
+  ingest: IngestService;
 }
 
 const ServicesContext = createContext<Services | null>(null);
@@ -28,6 +30,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       health: new HealthService(http),
       transcripts: new TranscriptService(http),
       realtime: new RealtimeService(wsBaseUrl),
+      ingest: new IngestService(http),
     };
   }, []);
 

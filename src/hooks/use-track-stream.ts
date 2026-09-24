@@ -73,6 +73,7 @@ export interface TrackStream {
   list: TrackView[];
   status: ConnectionStatus;
   upsert: (track: Track) => void;
+  remove: (trackId: string) => void;
 }
 
 export function useTrackStream(trackId: string | null = null): TrackStream {
@@ -101,5 +102,13 @@ export function useTrackStream(trackId: string | null = null): TrackStream {
     }));
   }, []);
 
-  return { views, list, status, upsert };
+  const remove = useCallback((trackId: string) => {
+    setViews((current) => {
+      const next = { ...current };
+      delete next[trackId];
+      return next;
+    });
+  }, []);
+
+  return { views, list, status, upsert, remove };
 }

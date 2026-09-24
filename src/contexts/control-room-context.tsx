@@ -5,6 +5,7 @@ import { useServices } from "@/contexts/services-context";
 import { useTrackStream, type TrackView } from "@/hooks/use-track-stream";
 import { EMPTY_TOTALS, type EventTotals } from "@/models/totals.model";
 import { isTrackRunning, type NewTrack } from "@/models/track.model";
+import type { IngestStatus } from "@/models/ingest.model";
 import type { ConnectionStatus, EngineInfo, GlossaryOption } from "@/models/engine.model";
 import type { Language } from "@/models/language.model";
 import type { TranscriptFormat } from "@/services/transcript.service";
@@ -17,8 +18,13 @@ interface ControlRoomValue {
   glossaries: GlossaryOption[];
   status: ConnectionStatus;
   isCreating: boolean;
-  createTrack: (input: NewTrack) => Promise<void>;
+  ingests: Record<string, IngestStatus>;
+  createTrack: (input: NewTrack, mediaSource?: string) => Promise<void>;
+  startIngest: (trackId: string, source: string) => Promise<void>;
+  stopIngest: (trackId: string) => Promise<void>;
   stopTrack: (trackId: string) => Promise<void>;
+  removeTrack: (trackId: string) => Promise<void>;
+  clearEndedTracks: () => Promise<number>;
   transcriptUrl: (trackId: string, format: TranscriptFormat, language?: Language) => string;
 }
 
@@ -46,13 +52,14 @@ function computeTotals(tracks: TrackView[]): EventTotals {
 }
 
 export function ControlRoomProvider({ children }: { children: ReactNode }) {
-  const { sessions, glossaries: glossaryService, health, transcripts } = useServices();
-  const { list, status, upsert } = useTrackStream(null);
+  const { sessions, glossaries: glossaryService, health, transcripts, ingest } = useServices();
+  const { list, status, upsert, remove: removeFromStream } = useTrackStream(null);
 
   const [engine, setEngine] = useState<EngineInfo | null>(null);
   const [engineError, setEngineError] = useState<string | null>(null);
   const [glossaries, setGlossaries] = useState<GlossaryOption[]>([]);
   const [isCreating, setIsCreating] = useState(false);
+  const [ingests, setIngests] = useState<Record<string, IngestStatus>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -81,24 +88,77 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
     };
   }, [health, glossaryService]);
 
+  const startIngest = useCallback(
+    async (trackId: string, source: string) => {
+      const status = await ingest.start(trackId, { source });
+      setIngests((current) => ({ ...current, [trackId]: status }));
+    },
+    [ingest],
+  );
+
+  const stopIngest = useCallback(
+    async (trackId: string) => {
+      await ingest.stop(trackId);
+      setIngests((current) => {
+        const next = { ...current };
+        delete next[trackId];
+        return next;
+      });
+    },
+    [ingest],
+  );
+
   const createTrack = useCallback(
-    async (input: NewTrack) => {
+    async (input: NewTrack, mediaSource?: string) => {
       setIsCreating(true);
       try {
-        upsert(await sessions.create(input));
+        const track = await sessions.create(input);
+        upsert(track);
+        if (mediaSource) await startIngest(track.id, mediaSource);
       } finally {
         setIsCreating(false);
       }
     },
-    [sessions, upsert],
+    [sessions, upsert, startIngest],
   );
 
   const stopTrack = useCallback(
     async (trackId: string) => {
+      await ingest.stop(trackId).catch(() => undefined);
+      setIngests((current) => {
+        const next = { ...current };
+        delete next[trackId];
+        return next;
+      });
       upsert(await sessions.stop(trackId));
     },
-    [sessions, upsert],
+    [sessions, upsert, ingest],
   );
+
+  const dropTrack = useCallback((trackId: string) => {
+    setIngests((current) => {
+      const next = { ...current };
+      delete next[trackId];
+      return next;
+    });
+    removeFromStream(trackId);
+  }, [removeFromStream]);
+
+  const removeTrack = useCallback(
+    async (trackId: string) => {
+      await sessions.remove(trackId);
+      dropTrack(trackId);
+    },
+    [sessions, dropTrack],
+  );
+
+  const clearEndedTracks = useCallback(async () => {
+    const removed = await sessions.removeEnded();
+    for (const view of list) {
+      if (view.track.status !== "live" && view.track.status !== "starting") dropTrack(view.track.id);
+    }
+    return removed;
+  }, [sessions, list, dropTrack]);
 
   const transcriptUrl = useCallback(
     (trackId: string, format: TranscriptFormat, language?: Language) =>
@@ -115,11 +175,31 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
       glossaries,
       status,
       isCreating,
+      ingests,
       createTrack,
+      startIngest,
+      stopIngest,
       stopTrack,
+      removeTrack,
+      clearEndedTracks,
       transcriptUrl,
     }),
-    [list, engine, engineError, glossaries, status, isCreating, createTrack, stopTrack, transcriptUrl],
+    [
+      list,
+      engine,
+      engineError,
+      glossaries,
+      status,
+      isCreating,
+      ingests,
+      createTrack,
+      startIngest,
+      stopIngest,
+      stopTrack,
+      removeTrack,
+      clearEndedTracks,
+      transcriptUrl,
+    ],
   );
 
   return <ControlRoomContext.Provider value={value}>{children}</ControlRoomContext.Provider>;
