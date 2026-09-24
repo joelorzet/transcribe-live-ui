@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Download01, Eye, Share07, StopCircle, Trash01 } from "@untitledui/icons";
+import { ArrowRight, Download01, Eye, Share07, StopCircle, Trash01 } from "@untitledui/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,32 +9,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { CaptionStack } from "@/components/captions/caption-stack";
+import { TrackOutputsSummary } from "@/components/control-room/track-outputs-summary";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { languageLabel, type Language } from "@/models/language.model";
 import { TrackStatusBadge } from "@/components/control-room/status-badge";
 import { formatDuration, formatLatency, formatUsd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { TrackView } from "@/hooks/use-track-stream";
-import type { ReactNode } from "react";
 
 interface TrackCardProps {
   view: TrackView;
   downloads: { label: string; href: string }[];
-  outputs: ReactNode;
   isPending: boolean;
   onStop: () => void;
   onRemove: () => void;
-  sourceControl?: ReactNode;
-  outputsBar: ReactNode;
 }
 
 export function TrackCard({
   view,
   downloads,
-  outputs,
   isPending,
   onStop,
   onRemove,
-  sourceControl,
-  outputsBar,
 }: TrackCardProps) {
   const { track } = view;
   const isRunning = track.status === "live" || track.status === "starting";
@@ -49,11 +45,20 @@ export function TrackCard({
   return (
     <Card className={cn("gap-0 overflow-hidden py-0", track.status === "live" && "border-primary/40")}>
       <CardHeader className="flex flex-row flex-wrap items-center gap-2 border-b px-4 py-3">
-        <span className="min-w-0 flex-1 truncate text-[0.95rem] font-semibold" title={track.title}>
+        <Link
+          href={`/sources/${track.id}`}
+          title={`Open ${track.title}`}
+          className="hover:text-primary min-w-0 flex-1 cursor-pointer truncate text-[0.95rem] font-semibold transition-colors"
+        >
           {track.title}
-        </span>
-        <span className="text-muted-foreground font-mono text-[0.68rem] tracking-wider uppercase">
-          {track.spokenLanguage} → {track.outputs.map((output) => output.language).join(" + ")}
+        </Link>
+        <span className="text-muted-foreground text-xs">
+          Speaking{" "}
+          <span className="text-foreground font-medium">
+            {track.spokenLanguage === "auto"
+              ? "auto-detect"
+              : languageLabel(track.spokenLanguage as Language)}
+          </span>
         </span>
         <TrackStatusBadge status={track.status} />
       </CardHeader>
@@ -66,11 +71,9 @@ export function TrackCard({
         />
       </CardContent>
 
-      <div className="border-t px-4 py-2.5">{outputsBar}</div>
-
-      {sourceControl && isRunning ? (
-        <div className="border-t px-4 py-2.5">{sourceControl}</div>
-      ) : null}
+      <div className="border-t px-4 py-2.5">
+        <TrackOutputsSummary outputs={track.outputs} />
+      </div>
 
       <div className="bg-border grid grid-cols-2 gap-px border-y sm:grid-cols-4">
         {metrics.map((metric) => (
@@ -84,18 +87,37 @@ export function TrackCard({
       </div>
 
       <CardFooter className="flex flex-wrap gap-2 px-4 py-3">
-        <Button asChild variant="outline" size="sm">
-          <Link href={`/session/${track.id}`} target="_blank">
-            <Eye className="size-3.5" aria-hidden /> Captions
-          </Link>
-        </Button>
-        {outputs}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Download01 className="size-3.5" aria-hidden /> Export
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/sources/${track.id}`}>
+                <ArrowRight className="size-3.5" aria-hidden /> Manage
+              </Link>
             </Button>
-          </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent>Open this source to change its audio input and output languages</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button asChild variant="ghost" size="sm">
+              <Link href={`/session/${track.id}`} target="_blank">
+                <Eye className="size-3.5" aria-hidden /> Captions
+              </Link>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Full screen subtitles for the audience</TooltipContent>
+        </Tooltip>
+        <DropdownMenu>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Download01 className="size-3.5" aria-hidden /> Export
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent>Download the transcript as subtitles or plain text</TooltipContent>
+          </Tooltip>
           <DropdownMenuContent align="start">
             {downloads.map((download) => (
               <DropdownMenuItem key={download.label} asChild>
@@ -105,25 +127,35 @@ export function TrackCard({
           </DropdownMenuContent>
         </DropdownMenu>
         {isRunning ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-destructive ml-auto"
-            disabled={isPending}
-            onClick={onStop}
-          >
-            <StopCircle className="size-3.5" aria-hidden /> {isPending ? "Stopping…" : "Stop"}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-destructive ml-auto"
+                disabled={isPending}
+                onClick={onStop}
+              >
+                <StopCircle className="size-3.5" aria-hidden /> {isPending ? "Stopping" : "Stop"}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Stop transcribing. The transcript stays available</TooltipContent>
+          </Tooltip>
         ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-destructive ml-auto"
-            disabled={isPending}
-            onClick={onRemove}
-          >
-            <Trash01 className="size-3.5" aria-hidden /> {isPending ? "Removing…" : "Remove"}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-destructive ml-auto"
+                disabled={isPending}
+                onClick={onRemove}
+              >
+                <Trash01 className="size-3.5" aria-hidden /> {isPending ? "Removing" : "Remove"}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Delete this source and its transcript</TooltipContent>
+          </Tooltip>
         )}
       </CardFooter>
     </Card>

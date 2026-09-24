@@ -9,9 +9,10 @@ interface TopbarProps {
   engine: EngineInfo | null;
   engineError: string | null;
   status: ConnectionStatus;
+  liveInputs?: number;
 }
 
-export function Topbar({ engine, engineError, status }: TopbarProps) {
+export function Topbar({ engine, engineError, status, liveInputs = 0 }: TopbarProps) {
   return (
     <header className="bg-background/90 sticky top-0 z-30 mb-6 flex flex-wrap items-center gap-3 border-b py-4 backdrop-blur">
       <Link href="/" className="flex items-center gap-2 font-bold tracking-tight">
@@ -38,8 +39,12 @@ export function Topbar({ engine, engineError, status }: TopbarProps) {
             <span className="size-1.5 rounded-full bg-current" />
             {engine.label}
           </Badge>
-          <Badge variant="outline" className="text-muted-foreground font-mono text-[0.68rem]">
-            capacity {engine.capacity}
+          <Badge
+            variant="outline"
+            className="text-muted-foreground font-mono text-[0.68rem]"
+            title="Concurrent live inputs in use, and the configured maximum"
+          >
+            {liveInputs}/{engine.capacity} inputs
           </Badge>
         </>
       ) : null}

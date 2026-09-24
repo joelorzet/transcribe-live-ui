@@ -15,14 +15,14 @@ export function useDemoTrack() {
     try {
       await createTrack(
         {
-          title: "Demo — Nerdearla 2025",
+          title: "Demo, Nerdearla 2025",
           spokenLanguage: "es",
           subtitleLanguages: ["en"],
           glossaryId: "nerdearla",
         },
         DEMO_SOURCE,
       );
-      toast.success("Demo track started — captions appear in a couple of seconds");
+      toast.success("Demo track started. Captions appear in a couple of seconds");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not start the demo track");
     } finally {

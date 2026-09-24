@@ -14,7 +14,7 @@ export interface RealtimeHandlers {
 export class RealtimeService {
   constructor(private readonly resolveWsUrl: () => string) {}
 
-  subscribe(trackId: string | null, handlers: RealtimeHandlers): () => void {
+  subscribe(trackId: string | null, handlers: RealtimeHandlers, language?: string): () => void {
     let socket: WebSocket | null = null;
     let retryMs = INITIAL_RETRY_MS;
     let retryTimer: ReturnType<typeof setTimeout>;
@@ -22,8 +22,11 @@ export class RealtimeService {
 
     const connect = () => {
       if (disposed) return;
-      const suffix = trackId ? `?sessionId=${encodeURIComponent(trackId)}` : "";
-      socket = new WebSocket(`${this.resolveWsUrl()}/ws/view${suffix}`);
+      const params = new URLSearchParams();
+      if (trackId) params.set("sessionId", trackId);
+      if (language) params.set("lang", language);
+      const query = params.toString();
+      socket = new WebSocket(`${this.resolveWsUrl()}/ws/view${query ? `?${query}` : ""}`);
 
       socket.addEventListener("open", () => {
         retryMs = INITIAL_RETRY_MS;

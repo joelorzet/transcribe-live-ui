@@ -48,8 +48,8 @@ export function TrackSourceControl({ trackId }: { trackId: string }) {
               onClick={() => {
                 void navigator.clipboard
                   .writeText(ingest.pushUrl as string)
-                  .then(() => toast.success("RTMP URL copied — paste it in OBS → Settings → Stream"))
-                  .catch(() => toast.error("Clipboard blocked — select the URL and copy it"));
+                  .then(() => toast.success("RTMP URL copied. Paste it in OBS under Settings, Stream"))
+                  .catch(() => toast.error("Clipboard blocked. Select the URL and copy it"));
               }}
             >
               <Copy01 className="size-3.5" aria-hidden /> Copy

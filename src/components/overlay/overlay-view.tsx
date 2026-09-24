@@ -19,7 +19,7 @@ export function OverlayView({ trackId }: { trackId: string }) {
         ? "text-[clamp(16px,2.2vw,30px)]"
         : "text-[clamp(22px,3.4vw,46px)]";
 
-  const { views, status } = useTrackStream(trackId);
+  const { views, status } = useTrackStream(trackId, language ?? undefined);
   const view = views[trackId];
 
   const spoken = view?.interim || view?.original || "";

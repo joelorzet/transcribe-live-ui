@@ -71,7 +71,7 @@ export function TrackOutputsDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Outputs — {trackTitle}</DialogTitle>
+          <DialogTitle>Outputs for {trackTitle}</DialogTitle>
           <DialogDescription>
             One output per language. Add a separate browser source in OBS for each language you
             broadcast.
@@ -163,7 +163,7 @@ export function TrackOutputsDialog({
             <UrlRow url={overlayUrl} label="overlay" onCopy={() => void copy(overlayUrl, "Overlay URL")} />
 
             <ol className="text-muted-foreground list-decimal space-y-1 pl-5 text-xs">
-              <li>In OBS: Sources → + → Browser</li>
+              <li>In OBS, open Sources, click the plus button, pick Browser</li>
               <li>Paste this URL, set 1920 × 1080</li>
               <li>Tick “Shutdown source when not visible”</li>
             </ol>

@@ -76,18 +76,22 @@ export interface TrackStream {
   remove: (trackId: string) => void;
 }
 
-export function useTrackStream(trackId: string | null = null): TrackStream {
+export function useTrackStream(trackId: string | null = null, language?: string): TrackStream {
   const { realtime } = useServices();
   const [views, setViews] = useState<TrackViewMap>({});
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
 
   useEffect(
     () =>
-      realtime.subscribe(trackId, {
-        onEvent: (event) => setViews((current) => reduce(current, event)),
-        onStatusChange: setStatus,
-      }),
-    [realtime, trackId],
+      realtime.subscribe(
+        trackId,
+        {
+          onEvent: (event) => setViews((current) => reduce(current, event)),
+          onStatusChange: setStatus,
+        },
+        language,
+      ),
+    [realtime, trackId, language],
   );
 
   const list = useMemo(

@@ -105,7 +105,7 @@ export function GlossaryDialog({ glossaryId }: { glossaryId: string }) {
                   <Input
                     aria-label={`Translation in ${languageLabel(language)}`}
                     className="h-8 min-w-36 flex-1 text-xs"
-                    placeholder={`${language.toUpperCase()} — leave empty to keep as-is`}
+                    placeholder={`${language.toUpperCase()} translation, leave empty to keep as-is`}
                     value={term.translations[language] ?? ""}
                     onChange={(event) => setTranslation(index, event.target.value)}
                   />

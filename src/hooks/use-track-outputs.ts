@@ -60,7 +60,7 @@ export function useTrackOutputs(trackId: string, subtitleLanguages: Language[]) 
       await navigator.clipboard.writeText(value);
       toast.success(`${label} copied`);
     } catch {
-      toast.error("Clipboard blocked — select the URL and copy it manually");
+      toast.error("Clipboard blocked. Select the URL and copy it manually");
     }
   }, []);
 

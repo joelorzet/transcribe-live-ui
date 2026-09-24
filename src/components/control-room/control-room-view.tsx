@@ -3,25 +3,29 @@
 import Link from "next/link";
 import { Plus, Trash01 } from "@untitledui/icons";
 import { Button } from "@/components/ui/button";
-import { outputLanguages } from "@/models/track.model";
 import { useControlRoom } from "@/contexts/control-room-context";
+import { useTrackFilters } from "@/hooks/use-track-filters";
+import { TrackFiltersBar } from "@/components/control-room/track-filters-bar";
 import { useTrackActions } from "@/hooks/use-track-actions";
 import { Topbar } from "@/components/control-room/topbar";
 import { TotalsGrid } from "@/components/control-room/totals-grid";
 import { TrackCard } from "@/components/control-room/track-card";
-import { TrackSourceControl } from "@/components/control-room/track-source-control";
-import { TrackOutputsDialog } from "@/components/control-room/track-outputs-dialog";
-import { TrackOutputsBar } from "@/components/control-room/track-outputs-bar";
-import { Share07 } from "@untitledui/icons";
 import { EmptyTracks } from "@/components/control-room/empty-tracks";
 
 export function ControlRoomView() {
   const { tracks, totals, engine, engineError, status, transcriptUrl } = useControlRoom();
+  const { filters, update, reset, visible, inputLanguages, outputLanguages: outputCodes, isFiltered, total } =
+    useTrackFilters();
   const { stop, remove, clearEnded, pendingId, isClearing } = useTrackActions();
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 pb-16 sm:px-6">
-      <Topbar engine={engine} engineError={engineError} status={status} />
+      <Topbar
+        engine={engine}
+        engineError={engineError}
+        status={status}
+        liveInputs={totals.liveInputs}
+      />
 
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap items-center gap-3">
@@ -46,11 +50,26 @@ export function ControlRoomView() {
               </Button>
             ) : null}
           </div>
+          <TrackFiltersBar
+            filters={filters}
+            update={update}
+            reset={reset}
+            isFiltered={isFiltered}
+            inputLanguages={inputLanguages}
+            outputLanguages={outputCodes}
+            shown={visible.length}
+            total={total}
+          />
+
           {tracks.length === 0 ? (
             <EmptyTracks />
+          ) : visible.length === 0 ? (
+            <div className="text-muted-foreground rounded-xl border border-dashed px-6 py-10 text-center text-sm">
+              No sources match these filters.
+            </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-              {tracks.map((view) => (
+              {visible.map((view) => (
                 <TrackCard
                   key={view.track.id}
                   view={view}
@@ -63,22 +82,11 @@ export function ControlRoomView() {
                       href: transcriptUrl(view.track.id, "srt", code),
                     })),
                   ]}
-                  outputs={
-                    <TrackOutputsDialog
-                      trackId={view.track.id}
-                      trackTitle={view.track.title}
-                      subtitleLanguages={outputLanguages(view.track)}
-                    >
-                      <Button variant="outline" size="sm">
-                        <Share07 className="size-3.5" aria-hidden /> Outputs
-                      </Button>
-                    </TrackOutputsDialog>
-                  }
+
                   isPending={pendingId === view.track.id}
                   onStop={() => void stop(view.track.id)}
                   onRemove={() => void remove(view.track.id)}
-                  sourceControl={<TrackSourceControl trackId={view.track.id} />}
-                  outputsBar={<TrackOutputsBar track={view.track} />}
+
                 />
               ))}
             </div>

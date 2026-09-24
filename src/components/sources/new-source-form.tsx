@@ -51,7 +51,7 @@ export function NewSourceForm() {
                 <Label htmlFor="title">Source name</Label>
                 <Input
                   id="title"
-                  placeholder="Track A — Main stage"
+                  placeholder="Track A, main stage"
                   value={form.title}
                   onChange={(event) => update("title", event.target.value)}
                 />
@@ -87,7 +87,7 @@ export function NewSourceForm() {
               />
               <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
                 <Signal01 className="size-3.5" aria-hidden />
-                Leave empty to push from OBS instead — you can start an RTMP endpoint after creating
+                Leave empty to push from OBS instead. You can start an RTMP endpoint after creating
                 the source.
               </p>
             </div>
