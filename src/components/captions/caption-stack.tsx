@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { toDisplayCaption } from "@/lib/caption";
 import type { Language } from "@/models/language.model";
 
 interface CaptionStackProps {
@@ -29,7 +30,7 @@ export function CaptionStack({ interim, original, translations, size = "card" }:
             size === "stage" ? "text-3xl leading-snug md:text-4xl" : "text-[0.95rem] leading-relaxed",
           )}
         >
-          {interim}
+          {toDisplayCaption(interim)}
         </p>
       ) : null}
 
@@ -40,7 +41,7 @@ export function CaptionStack({ interim, original, translations, size = "card" }:
             size === "stage" ? "text-3xl leading-snug md:text-4xl" : "text-[0.95rem] leading-relaxed",
           )}
         >
-          {original}
+          {toDisplayCaption(original)}
         </p>
       ) : null}
 
@@ -55,7 +56,7 @@ export function CaptionStack({ interim, original, translations, size = "card" }:
           <span className="text-muted-foreground mr-2 font-mono text-[0.65rem] tracking-wider uppercase">
             {language}
           </span>
-          {text}
+          {toDisplayCaption(text)}
         </p>
       ))}
     </div>
