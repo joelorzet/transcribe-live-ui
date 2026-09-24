@@ -9,6 +9,7 @@ import { TrackFiltersBar } from "@/components/control-room/track-filters-bar";
 import { useTrackActions } from "@/hooks/use-track-actions";
 import { Topbar } from "@/components/control-room/topbar";
 import { TotalsGrid } from "@/components/control-room/totals-grid";
+import { HealthPanel } from "@/components/control-room/health-panel";
 import { TrackCard } from "@/components/control-room/track-card";
 import { EmptyTracks } from "@/components/control-room/empty-tracks";
 
@@ -49,6 +50,8 @@ export function ControlRoomView() {
             </Link>
           </Button>
         </div>
+
+        <HealthPanel />
 
         <TotalsGrid totals={totals} />
 
