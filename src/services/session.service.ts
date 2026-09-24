@@ -27,6 +27,17 @@ export class SessionService {
     return TrackMapper.fromDtoToModel(dto);
   }
 
+  async updateSource(
+    trackId: string,
+    patch: { sourceLanguage?: string; glossaryId?: string },
+  ): Promise<Track> {
+    const dto = await this.http.patch<SessionSnapshotDto>(
+      `/api/sessions/${encodeURIComponent(trackId)}`,
+      patch,
+    );
+    return TrackMapper.fromDtoToModel(dto);
+  }
+
   async addOutput(trackId: string, language: string): Promise<Track> {
     const dto = await this.http.post<SessionSnapshotDto>(
       `/api/sessions/${encodeURIComponent(trackId)}/outputs`,

@@ -119,6 +119,8 @@ export interface IngestStatusDto {
   startedAt: number;
   waitingForPublisher: boolean;
   pushUrl?: string;
+  server?: string;
+  streamKey?: string;
 }
 
 export interface StartIngestDto {

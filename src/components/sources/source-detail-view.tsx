@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, StopCircle } from "@untitledui/icons";
+import { AlertTriangle, ArrowLeft, Plus, StopCircle, Trash01 } from "@untitledui/icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CaptionStack } from "@/components/captions/caption-stack";
 import { TrackStatusBadge } from "@/components/control-room/status-badge";
-import { TrackSourceControl } from "@/components/control-room/track-source-control";
+import { SourceInputPanel } from "@/components/sources/source-input-panel";
+import { SourceSettingsRow } from "@/components/sources/source-settings-row";
 import { OutputStreamCard } from "@/components/sources/output-stream-card";
 import { useControlRoom } from "@/contexts/control-room-context";
 import { useTrackOutputsManager } from "@/hooks/use-track-outputs-manager";
@@ -22,19 +23,24 @@ import { useTrackActions } from "@/hooks/use-track-actions";
 import { formatDuration, formatLatency, formatUsd } from "@/lib/format";
 import { buildAudienceUrl, buildOverlayUrl } from "@/models/output.model";
 import { languageLabel, type Language } from "@/models/language.model";
+import type { TrackView } from "@/hooks/use-track-stream";
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-1 rounded-lg border px-3 py-2.5">
+      <span className="text-muted-foreground text-[0.62rem] tracking-wider uppercase">{label}</span>
+      <span className="tabular font-mono text-base leading-none">{value}</span>
+    </div>
+  );
+}
 
 export function SourceDetailView({ trackId }: { trackId: string }) {
-  const { tracks, transcriptUrl } = useControlRoom();
-  const { stop, pendingId } = useTrackActions();
-  const [origin, setOrigin] = useState("");
-
-  useEffect(() => setOrigin(window.location.origin), []);
-
+  const { tracks } = useControlRoom();
   const view = tracks.find((candidate) => candidate.track.id === trackId);
 
   if (!view) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+      <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
         <Button asChild variant="ghost" size="sm">
           <Link href="/">
             <ArrowLeft className="size-4" aria-hidden /> Control room
@@ -47,42 +53,25 @@ export function SourceDetailView({ trackId }: { trackId: string }) {
     );
   }
 
-  const { track } = view;
-  const isRunning = track.status === "live" || track.status === "starting";
-
-  return (
-    <SourceDetailBody
-      view={view}
-      origin={origin}
-      isRunning={isRunning}
-      isStopping={pendingId === track.id}
-      onStop={() => void stop(track.id)}
-      transcriptUrl={transcriptUrl}
-    />
-  );
+  return <SourceDetailBody view={view} />;
 }
 
-function SourceDetailBody({
-  view,
-  origin,
-  isRunning,
-  isStopping,
-  onStop,
-  transcriptUrl,
-}: {
-  view: NonNullable<ReturnType<typeof useControlRoom>["tracks"][number]>;
-  origin: string;
-  isRunning: boolean;
-  isStopping: boolean;
-  onStop: () => void;
-  transcriptUrl: ReturnType<typeof useControlRoom>["transcriptUrl"];
-}) {
+function SourceDetailBody({ view }: { view: TrackView }) {
   const { track } = view;
-  const { available, add, remove, pendingLanguage } = useTrackOutputsManager(track);
+  const { transcriptUrl } = useControlRoom();
+  const { stop, remove, pendingId } = useTrackActions();
+  const { available, add, remove: removeOutput, pendingLanguage } = useTrackOutputsManager(track);
+  const [origin, setOrigin] = useState("");
 
-  const copy = (url: string, label: string) => {
+  useEffect(() => setOrigin(window.location.origin), []);
+
+  const isRunning = track.status === "live" || track.status === "starting";
+  const canEditOutputs = track.status !== "ended";
+  const isPending = pendingId === track.id;
+
+  const copy = (value: string, label: string) => {
     void navigator.clipboard
-      .writeText(url)
+      .writeText(value)
       .then(() => toast.success(`${label} copied`))
       .catch(() => toast.error("Clipboard blocked. Copy it manually"));
   };
@@ -97,8 +86,13 @@ function SourceDetailBody({
         </Button>
         <h1 className="truncate text-base font-semibold">{track.title}</h1>
         <TrackStatusBadge status={track.status} />
-        <span className="text-muted-foreground font-mono text-[0.68rem] tracking-wider uppercase">
-          {track.spokenLanguage} source
+        <span className="text-muted-foreground text-xs">
+          Speaking{" "}
+          <span className="text-foreground font-medium">
+            {track.spokenLanguage === "auto"
+              ? "auto-detect"
+              : languageLabel(track.spokenLanguage as Language)}
+          </span>
         </span>
         <div className="flex-1" />
         {isRunning ? (
@@ -106,34 +100,61 @@ function SourceDetailBody({
             variant="ghost"
             size="sm"
             className="hover:text-destructive"
-            disabled={isStopping}
-            onClick={onStop}
+            disabled={isPending}
+            onClick={() => void stop(track.id)}
           >
-            <StopCircle className="size-3.5" aria-hidden /> {isStopping ? "Stopping…" : "Stop source"}
+            <StopCircle className="size-3.5" aria-hidden /> {isPending ? "Stopping" : "Stop source"}
           </Button>
-        ) : null}
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:text-destructive"
+            disabled={isPending}
+            onClick={() => void remove(track.id)}
+          >
+            <Trash01 className="size-3.5" aria-hidden /> {isPending ? "Removing" : "Remove source"}
+          </Button>
+        )}
       </header>
 
+      {track.errorMessage ? (
+        <div className="border-destructive/40 bg-destructive/10 text-destructive flex items-start gap-2 rounded-lg border px-4 py-3 text-sm">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <div>
+            <p className="font-medium">This source stopped with an error</p>
+            <p className="mt-0.5 font-mono text-xs opacity-90">{track.errorMessage}</p>
+          </div>
+        </div>
+      ) : null}
+
       <Card>
-        <CardHeader className="flex flex-row flex-wrap items-center gap-3">
+        <CardHeader>
           <CardTitle className="text-base">Input</CardTitle>
-          <div className="flex-1" />
-          <span className="text-muted-foreground font-mono text-xs">
-            {formatDuration(track.metrics.audioSeconds)} audio · {track.metrics.segments} segments ·
-            p50 {formatLatency(track.metrics.latencyP50Ms)} · audio {formatUsd(track.cost.audioUsd)}
-          </span>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <TrackSourceControl trackId={track.id} />
-          <div className="border-t pt-3">
+        <CardContent className="flex flex-col gap-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <Stat label="Audio" value={formatDuration(track.metrics.audioSeconds)} />
+            <Stat label="Segments" value={String(track.metrics.segments)} />
+            <Stat label="Latency p50" value={formatLatency(track.metrics.latencyP50Ms)} />
+            <Stat label="Latency p95" value={formatLatency(track.metrics.latencyP95Ms)} />
+            <Stat label="Audio cost" value={formatUsd(track.cost.audioUsd)} />
+          </div>
+
+          <SourceSettingsRow
+            trackId={track.id}
+            spokenLanguage={track.spokenLanguage}
+            glossaryId={track.glossaryId}
+            disabled={!canEditOutputs}
+          />
+
+          <SourceInputPanel trackId={track.id} onCopy={copy} />
+
+          <div className="border-t pt-4">
             <div className="text-muted-foreground mb-2 text-[0.68rem] font-medium tracking-wider uppercase">
-              Original transcript
+              Live transcript in {track.spokenLanguage === "auto" ? "the detected language" : languageLabel(track.spokenLanguage as Language)}
             </div>
-            <CaptionStack
-              interim={view.interim}
-              original={view.original}
-              translations={{}}
-            />
+            <CaptionStack interim={view.interim} original={view.original} translations={{}} />
           </div>
         </CardContent>
       </Card>
@@ -142,14 +163,15 @@ function SourceDetailBody({
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="text-base font-semibold">Output streams</h2>
           <span className="text-muted-foreground text-xs">
-            {track.outputs.length} live · translation {formatUsd(track.cost.translationUsd)}
+            {track.outputs.length} {track.outputs.length === 1 ? "language" : "languages"} · translation{" "}
+            {formatUsd(track.cost.translationUsd)}
           </span>
           <div className="flex-1" />
-          {isRunning && available.length > 0 ? (
+          {canEditOutputs && available.length > 0 ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Plus className="size-3.5" aria-hidden /> Add output
+                <Button size="sm">
+                  <Plus className="size-3.5" aria-hidden /> Add language
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto">
@@ -186,9 +208,9 @@ function SourceDetailBody({
                 })}
                 audienceUrl={buildAudienceUrl(origin, track.id, output.language as Language)}
                 srtUrl={transcriptUrl(track.id, "srt", output.language as Language)}
-                canRemove={isRunning}
+                canRemove={canEditOutputs}
                 isPending={pendingLanguage === output.language}
-                onRemove={() => void remove(output.language as Language)}
+                onRemove={() => void removeOutput(output.language as Language)}
                 onCopy={copy}
               />
             ))}
