@@ -13,21 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateTrackForm } from "@/hooks/use-create-track-form";
-
-const SPOKEN_OPTIONS = [
-  { value: "auto", label: "Auto-detect" },
-  { value: "es", label: "Spanish" },
-  { value: "en", label: "English" },
-  { value: "pt", label: "Portuguese" },
-];
-
-const SUBTITLE_OPTIONS = [
-  { value: "en", label: "English" },
-  { value: "es", label: "Spanish" },
-  { value: "pt", label: "Portuguese" },
-  { value: "en,pt", label: "English + Portuguese" },
-  { value: "es,pt", label: "Spanish + Portuguese" },
-];
+import { SPOKEN_OPTIONS, SUBTITLE_OPTIONS } from "@/models/language.model";
 
 export function CreateTrackForm() {
   const { form, update, submit, isCreating, glossaries } = useCreateTrackForm();
