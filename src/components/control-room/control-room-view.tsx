@@ -23,6 +23,8 @@ export function ControlRoomView() {
     visible,
     inputLanguages,
     outputLanguages: outputCodes,
+    counts,
+    selectedCount,
     isFiltered,
     total,
   } = useTrackFilters();
@@ -69,6 +71,8 @@ export function ControlRoomView() {
             isFiltered={isFiltered}
             inputLanguages={inputLanguages}
             outputLanguages={outputCodes}
+            counts={counts}
+            selectedCount={selectedCount}
             shown={visible.length}
             total={total}
           />

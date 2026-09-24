@@ -9,11 +9,9 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { languageLabel, type Language, type SpokenLanguage } from "@/models/language.model";
 import { groupState, type FilterGroupKey, type SourceKind, type TrackFilters } from "@/models/filters.model";
 import type { TrackStatus } from "@/models/track.model";
@@ -21,7 +19,10 @@ import type { TrackStatus } from "@/models/track.model";
 interface Option {
   value: string;
   label: string;
+  dotClass?: string;
 }
+
+type CountFn = (value: string) => number;
 
 interface TrackFiltersBarProps {
   filters: TrackFilters;
@@ -32,73 +33,82 @@ interface TrackFiltersBarProps {
   isFiltered: boolean;
   inputLanguages: SpokenLanguage[];
   outputLanguages: Language[];
+  counts: Record<FilterGroupKey, CountFn>;
+  selectedCount: number;
   shown: number;
   total: number;
 }
 
 const STATUS_OPTIONS: Option[] = [
-  { value: "live", label: "Live" },
-  { value: "starting", label: "Starting" },
-  { value: "ended", label: "Ended" },
-  { value: "error", label: "Error" },
+  { value: "live", label: "Live", dotClass: "bg-primary" },
+  { value: "starting", label: "Starting", dotClass: "bg-sky-400" },
+  { value: "ended", label: "Ended", dotClass: "bg-muted-foreground" },
+  { value: "error", label: "Error", dotClass: "bg-destructive" },
 ];
 
 const SOURCE_OPTIONS: Option[] = [
-  { value: "rtmp", label: "OBS push" },
-  { value: "pull", label: "Pulled URL" },
-  { value: "none", label: "No source" },
+  { value: "rtmp", label: "OBS push", dotClass: "bg-violet-400" },
+  { value: "pull", label: "Pulled URL", dotClass: "bg-amber-400" },
+  { value: "none", label: "No source", dotClass: "bg-muted-foreground" },
 ];
 
-function FilterGroup({
+function FilterSection({
   label,
+  group,
   options,
   selected,
-  onToggle,
-  onSelectAll,
+  count,
+  toggle,
+  clearGroup,
 }: {
   label: string;
+  group: FilterGroupKey;
   options: Option[];
   selected: string[];
-  onToggle: (value: string) => void;
-  onSelectAll: () => void;
+  count: CountFn;
+  toggle: (group: FilterGroupKey, value: string) => void;
+  clearGroup: (group: FilterGroupKey) => void;
 }) {
   if (options.length === 0) return null;
 
   return (
-    <DropdownMenuSub>
-      <DropdownMenuSubTrigger>
+    <>
+      <DropdownMenuCheckboxItem
+        checked={groupState(selected, options.length)}
+        onSelect={(event) => {
+          event.preventDefault();
+          clearGroup(group);
+        }}
+        className="font-medium"
+      >
         {label}
         {selected.length > 0 ? (
-          <span className="text-muted-foreground ml-auto pl-3 font-mono text-xs">
+          <span className="text-muted-foreground ml-auto pr-6 font-mono text-xs">
             {selected.length}
           </span>
         ) : null}
-      </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent className="max-h-72 w-48 overflow-y-auto">
+      </DropdownMenuCheckboxItem>
+
+      {options.map((option) => (
         <DropdownMenuCheckboxItem
-          checked={groupState(selected, options.length)}
+          key={option.value}
+          checked={selected.includes(option.value)}
           onSelect={(event) => {
             event.preventDefault();
-            onSelectAll();
+            toggle(group, option.value);
           }}
+          className="pl-6"
         >
-          All
+          {option.dotClass ? (
+            <span className={cn("size-1.5 shrink-0 rounded-full", option.dotClass)} aria-hidden />
+          ) : null}
+          <span className="truncate">{option.label}</span>
+          <span className="text-muted-foreground ml-auto pr-6 font-mono text-xs">
+            {count(option.value)}
+          </span>
         </DropdownMenuCheckboxItem>
-        <DropdownMenuSeparator />
-        {options.map((option) => (
-          <DropdownMenuCheckboxItem
-            key={option.value}
-            checked={selected.includes(option.value)}
-            onSelect={(event) => {
-              event.preventDefault();
-              onToggle(option.value);
-            }}
-          >
-            {option.label}
-          </DropdownMenuCheckboxItem>
-        ))}
-      </DropdownMenuSubContent>
-    </DropdownMenuSub>
+      ))}
+    </>
   );
 }
 
@@ -140,6 +150,8 @@ export function TrackFiltersBar({
   isFiltered,
   inputLanguages,
   outputLanguages,
+  counts,
+  selectedCount,
   shown,
   total,
 }: TrackFiltersBarProps) {
@@ -175,37 +187,68 @@ export function TrackFiltersBar({
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="h-9">
             <FilterLines className="size-3.5" aria-hidden /> Filters
+            {selectedCount > 0 ? (
+              <span className="bg-primary/15 text-primary ml-1 rounded px-1.5 font-mono text-xs">
+                {selectedCount}
+              </span>
+            ) : null}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <FilterGroup
-            label="Status"
-            options={STATUS_OPTIONS}
-            selected={filters.statuses}
-            onToggle={(value) => toggle("statuses", value as TrackStatus)}
-            onSelectAll={() => clearGroup("statuses")}
-          />
-          <FilterGroup
-            label="Input"
-            options={inputOptions}
-            selected={filters.inputLanguages}
-            onToggle={(value) => toggle("inputLanguages", value as SpokenLanguage)}
-            onSelectAll={() => clearGroup("inputLanguages")}
-          />
-          <FilterGroup
-            label="Output"
-            options={outputOptions}
-            selected={filters.outputLanguages}
-            onToggle={(value) => toggle("outputLanguages", value as Language)}
-            onSelectAll={() => clearGroup("outputLanguages")}
-          />
-          <FilterGroup
-            label="Source"
-            options={SOURCE_OPTIONS}
-            selected={filters.sourceKinds}
-            onToggle={(value) => toggle("sourceKinds", value as SourceKind)}
-            onSelectAll={() => clearGroup("sourceKinds")}
-          />
+
+        <DropdownMenuContent align="end" className="w-64 p-0">
+          <div className="max-h-96 overflow-y-auto p-1">
+            <FilterSection
+              label="Status"
+              group="statuses"
+              options={STATUS_OPTIONS}
+              selected={filters.statuses}
+              count={counts.statuses}
+              toggle={(group, value) => toggle(group, value as TrackStatus)}
+              clearGroup={clearGroup}
+            />
+            <DropdownMenuSeparator />
+            <FilterSection
+              label="Input language"
+              group="inputLanguages"
+              options={inputOptions}
+              selected={filters.inputLanguages}
+              count={counts.inputLanguages}
+              toggle={(group, value) => toggle(group, value as SpokenLanguage)}
+              clearGroup={clearGroup}
+            />
+            <DropdownMenuSeparator />
+            <FilterSection
+              label="Output language"
+              group="outputLanguages"
+              options={outputOptions}
+              selected={filters.outputLanguages}
+              count={counts.outputLanguages}
+              toggle={(group, value) => toggle(group, value as Language)}
+              clearGroup={clearGroup}
+            />
+            <DropdownMenuSeparator />
+            <FilterSection
+              label="Source"
+              group="sourceKinds"
+              options={SOURCE_OPTIONS}
+              selected={filters.sourceKinds}
+              count={counts.sourceKinds}
+              toggle={(group, value) => toggle(group, value as SourceKind)}
+              clearGroup={clearGroup}
+            />
+          </div>
+
+          <div className="text-muted-foreground flex items-center gap-2 border-t px-3 py-2 text-xs">
+            <span>{selectedCount} selected</span>
+            <div className="flex-1" />
+            <button
+              type="button"
+              className="hover:text-foreground cursor-pointer transition-colors"
+              onClick={reset}
+            >
+              Clear
+            </button>
+          </div>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -231,14 +274,9 @@ export function TrackFiltersBar({
       />
 
       {isFiltered ? (
-        <>
-          <span className="text-muted-foreground font-mono text-xs">
-            {shown} of {total}
-          </span>
-          <Button variant="ghost" size="sm" onClick={reset}>
-            Clear all
-          </Button>
-        </>
+        <span className="text-muted-foreground font-mono text-xs">
+          {shown} of {total}
+        </span>
       ) : null}
     </div>
   );

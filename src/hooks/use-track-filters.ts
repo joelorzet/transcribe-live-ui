@@ -44,6 +44,28 @@ export function useTrackFilters() {
     [tracks, filters, sourceKindOf],
   );
 
+  const countBy = useCallback(
+    (predicate: (view: (typeof tracks)[number]) => boolean) => tracks.filter(predicate).length,
+    [tracks],
+  );
+
+  const counts = useMemo(
+    () => ({
+      statuses: (value: string) => countBy((view) => view.track.status === value),
+      inputLanguages: (value: string) => countBy((view) => view.track.spokenLanguage === value),
+      outputLanguages: (value: string) =>
+        countBy((view) => view.track.outputs.some((output) => output.language === value)),
+      sourceKinds: (value: string) => countBy((view) => sourceKindOf(view.track.id) === value),
+    }),
+    [countBy, sourceKindOf],
+  );
+
+  const selectedCount =
+    filters.statuses.length +
+    filters.inputLanguages.length +
+    filters.outputLanguages.length +
+    filters.sourceKinds.length;
+
   const inputLanguages = useMemo(
     () => [...new Set(tracks.map((view) => view.track.spokenLanguage))] as SpokenLanguage[],
     [tracks],
@@ -66,6 +88,8 @@ export function useTrackFilters() {
     visible,
     inputLanguages,
     outputLanguages,
+    counts,
+    selectedCount,
     isFiltered: hasActiveFilters(filters),
     total: tracks.length,
   };
