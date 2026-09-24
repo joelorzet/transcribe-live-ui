@@ -27,6 +27,14 @@ export class SessionService {
     return TrackMapper.fromDtoToModel(dto);
   }
 
+  async restart(trackId: string): Promise<Track> {
+    const dto = await this.http.post<SessionSnapshotDto>(
+      `/api/sessions/${encodeURIComponent(trackId)}/restart`,
+      {},
+    );
+    return TrackMapper.fromDtoToModel(dto);
+  }
+
   async updateSource(
     trackId: string,
     patch: { sourceLanguage?: string; glossaryId?: string },

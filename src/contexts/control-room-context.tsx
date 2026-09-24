@@ -25,6 +25,7 @@ interface ControlRoomValue {
   stopIngest: (trackId: string) => Promise<void>;
   stopTrack: (trackId: string) => Promise<void>;
   removeTrack: (trackId: string) => Promise<void>;
+  restartTrack: (trackId: string) => Promise<void>;
   updateSource: (trackId: string, patch: { sourceLanguage?: string; glossaryId?: string }) => Promise<void>;
   addOutput: (trackId: string, language: Language) => Promise<void>;
   removeOutput: (trackId: string, language: Language) => Promise<void>;
@@ -161,6 +162,13 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
     removeFromStream(trackId);
   }, [removeFromStream]);
 
+  const restartTrack = useCallback(
+    async (trackId: string) => {
+      upsert(await sessions.restart(trackId));
+    },
+    [sessions, upsert],
+  );
+
   const updateSource = useCallback(
     async (trackId: string, patch: { sourceLanguage?: string; glossaryId?: string }) => {
       upsert(await sessions.updateSource(trackId, patch));
@@ -220,6 +228,7 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
       stopIngest,
       stopTrack,
       removeTrack,
+      restartTrack,
       updateSource,
       addOutput,
       removeOutput,
@@ -240,6 +249,7 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
       stopIngest,
       stopTrack,
       removeTrack,
+      restartTrack,
       updateSource,
       addOutput,
       removeOutput,

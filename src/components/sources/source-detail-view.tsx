@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowLeft, Plus, StopCircle, Trash01 } from "@untitledui/icons";
+import { AlertTriangle, ArrowLeft, Plus, RefreshCw01, StopCircle, Trash01 } from "@untitledui/icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -24,6 +24,17 @@ import { formatDuration, formatLatency, formatUsd } from "@/lib/format";
 import { buildAudienceUrl, buildOverlayUrl } from "@/models/output.model";
 import { languageLabel, type Language } from "@/models/language.model";
 import type { TrackView } from "@/hooks/use-track-stream";
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="border-t pt-5">
+      <h3 className="text-muted-foreground mb-3 text-[0.68rem] font-medium tracking-wider uppercase">
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
@@ -59,7 +70,7 @@ export function SourceDetailView({ trackId }: { trackId: string }) {
 function SourceDetailBody({ view }: { view: TrackView }) {
   const { track } = view;
   const { transcriptUrl } = useControlRoom();
-  const { stop, remove, pendingId } = useTrackActions();
+  const { stop, remove, restart, pendingId } = useTrackActions();
   const { available, add, remove: removeOutput, pendingLanguage } = useTrackOutputsManager(track);
   const [origin, setOrigin] = useState("");
 
@@ -106,25 +117,38 @@ function SourceDetailBody({ view }: { view: TrackView }) {
             <StopCircle className="size-3.5" aria-hidden /> {isPending ? "Stopping" : "Stop source"}
           </Button>
         ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hover:text-destructive"
-            disabled={isPending}
-            onClick={() => void remove(track.id)}
-          >
-            <Trash01 className="size-3.5" aria-hidden /> {isPending ? "Removing" : "Remove source"}
-          </Button>
+          <>
+            <Button size="sm" disabled={isPending} onClick={() => void restart(track.id)}>
+              <RefreshCw01 className="size-3.5" aria-hidden /> {isPending ? "Restarting" : "Restart"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hover:text-destructive"
+              disabled={isPending}
+              onClick={() => void remove(track.id)}
+            >
+              <Trash01 className="size-3.5" aria-hidden /> Remove
+            </Button>
+          </>
         )}
       </header>
 
-      {track.errorMessage ? (
-        <div className="border-destructive/40 bg-destructive/10 text-destructive flex items-start gap-2 rounded-lg border px-4 py-3 text-sm">
+      {track.errorMessage || (!isRunning && track.status !== "ended") ? (
+        <div className="border-destructive/40 bg-destructive/10 text-destructive flex flex-wrap items-start gap-3 rounded-lg border px-4 py-3 text-sm">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="font-medium">This source stopped with an error</p>
-            <p className="mt-0.5 font-mono text-xs opacity-90">{track.errorMessage}</p>
+            <p className="mt-0.5 font-mono text-xs break-words opacity-90">
+              {track.errorMessage ?? "The speech stream closed unexpectedly."}
+            </p>
+            <p className="mt-1 text-xs opacity-80">
+              Retrying reconnects the speech model and keeps the transcript, outputs and glossary.
+            </p>
           </div>
+          <Button size="sm" disabled={isPending} onClick={() => void restart(track.id)}>
+            <RefreshCw01 className="size-3.5" aria-hidden /> {isPending ? "Retrying" : "Retry"}
+          </Button>
         </div>
       ) : null}
 
@@ -132,7 +156,7 @@ function SourceDetailBody({ view }: { view: TrackView }) {
         <CardHeader>
           <CardTitle className="text-base">Input</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-5">
+        <CardContent className="flex flex-col gap-6">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             <Stat label="Audio" value={formatDuration(track.metrics.audioSeconds)} />
             <Stat label="Segments" value={String(track.metrics.segments)} />
@@ -141,21 +165,28 @@ function SourceDetailBody({ view }: { view: TrackView }) {
             <Stat label="Audio cost" value={formatUsd(track.cost.audioUsd)} />
           </div>
 
-          <SourceSettingsRow
-            trackId={track.id}
-            spokenLanguage={track.spokenLanguage}
-            glossaryId={track.glossaryId}
-            disabled={!canEditOutputs}
-          />
+          <Section title="Audio source">
+            <SourceInputPanel trackId={track.id} onCopy={copy} />
+          </Section>
 
-          <SourceInputPanel trackId={track.id} onCopy={copy} />
+          <Section title="Recognition">
+            <SourceSettingsRow
+              trackId={track.id}
+              spokenLanguage={track.spokenLanguage}
+              glossaryId={track.glossaryId}
+              disabled={!canEditOutputs}
+            />
+          </Section>
 
-          <div className="border-t pt-4">
-            <div className="text-muted-foreground mb-2 text-[0.68rem] font-medium tracking-wider uppercase">
-              Live transcript in {track.spokenLanguage === "auto" ? "the detected language" : languageLabel(track.spokenLanguage as Language)}
-            </div>
+          <Section
+            title={`Live transcript in ${
+              track.spokenLanguage === "auto"
+                ? "the detected language"
+                : languageLabel(track.spokenLanguage as Language)
+            }`}
+          >
             <CaptionStack interim={view.interim} original={view.original} translations={{}} />
-          </div>
+          </Section>
         </CardContent>
       </Card>
 

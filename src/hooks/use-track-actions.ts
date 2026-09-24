@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useControlRoom } from "@/contexts/control-room-context";
 
 export function useTrackActions() {
-  const { stopTrack, removeTrack, clearEndedTracks } = useControlRoom();
+  const { stopTrack, removeTrack, restartTrack, clearEndedTracks } = useControlRoom();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [isClearing, setIsClearing] = useState(false);
 
@@ -36,6 +36,17 @@ export function useTrackActions() {
     [run, removeTrack],
   );
 
+  const restart = useCallback(
+    (trackId: string) =>
+      run(
+        trackId,
+        () => restartTrack(trackId),
+        "Source restarted",
+        "Could not restart the source",
+      ),
+    [run, restartTrack],
+  );
+
   const clearEnded = useCallback(async () => {
     setIsClearing(true);
     try {
@@ -48,5 +59,5 @@ export function useTrackActions() {
     }
   }, [clearEndedTracks]);
 
-  return { stop, remove, clearEnded, pendingId, isClearing };
+  return { stop, remove, restart, clearEnded, pendingId, isClearing };
 }
