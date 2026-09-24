@@ -13,8 +13,8 @@ export function EmptyTracks() {
       <div className="space-y-1">
         <p className="font-medium">No tracks running</p>
         <p className="text-muted-foreground max-w-md text-sm">
-          Start a track above and paste a YouTube or media URL. The server pulls the audio, captions
-          it live, and translates it as it goes.
+          Create a source and pick the languages to translate it into. The server pulls the audio,
+          captions it live, and you can add more output languages while it runs.
         </p>
       </div>
       <Button variant="outline" disabled={isStarting} onClick={() => void startDemo()}>

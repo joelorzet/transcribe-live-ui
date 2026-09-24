@@ -1,15 +1,15 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useControlRoom } from "@/contexts/control-room-context";
-import { toLanguage, toSpokenLanguage } from "@/models/language.model";
-import type { Language, SpokenLanguage } from "@/models/language.model";
+import { toSpokenLanguage, type Language, type SpokenLanguage } from "@/models/language.model";
 
 interface FormState {
   title: string;
   spokenLanguage: SpokenLanguage;
-  subtitleLanguages: string;
+  outputs: Language[];
   glossaryId: string;
   mediaSource: string;
 }
@@ -17,30 +17,35 @@ interface FormState {
 const INITIAL: FormState = {
   title: "",
   spokenLanguage: "es",
-  subtitleLanguages: "en",
+  outputs: ["en"],
   glossaryId: "nerdearla",
   mediaSource: "",
 };
 
-export function useCreateTrackForm() {
+export function useCreateTrackForm(onDone?: () => void) {
   const { createTrack, isCreating, glossaries } = useControlRoom();
   const [form, setForm] = useState<FormState>(INITIAL);
+  const router = useRouter();
 
   const update = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
   }, []);
 
+  const toggleOutput = useCallback((language: Language) => {
+    setForm((current) => ({
+      ...current,
+      outputs: current.outputs.includes(language)
+        ? current.outputs.filter((code) => code !== language)
+        : [...current.outputs, language],
+    }));
+  }, []);
+
   const submit = useCallback(async () => {
     const title = form.title.trim();
     if (!title) {
-      toast.error("Give the track a name");
+      toast.error("Give the source a name");
       return;
     }
-
-    const subtitleLanguages = form.subtitleLanguages
-      .split(",")
-      .map((code) => toLanguage(code.trim()))
-      .filter((code, index, all): code is Language => all.indexOf(code) === index);
 
     const mediaSource = form.mediaSource.trim();
 
@@ -49,19 +54,21 @@ export function useCreateTrackForm() {
         {
           title,
           spokenLanguage: toSpokenLanguage(form.spokenLanguage),
-          subtitleLanguages,
+          subtitleLanguages: form.outputs,
           glossaryId: form.glossaryId,
         },
         mediaSource || undefined,
       );
-      setForm((current) => ({ ...current, title: "", mediaSource: "" }));
+      setForm(INITIAL);
       toast.success(
         mediaSource ? `"${title}" is live and pulling audio` : `"${title}" is live, waiting for audio`,
       );
+      if (onDone) onDone();
+      else router.push("/");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not start the track");
+      toast.error(error instanceof Error ? error.message : "Could not start the source");
     }
-  }, [createTrack, form]);
+  }, [createTrack, form, onDone, router]);
 
-  return { form, update, submit, isCreating, glossaries };
+  return { form, update, toggleOutput, submit, isCreating, glossaries };
 }

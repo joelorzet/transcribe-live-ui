@@ -23,6 +23,7 @@ interface TrackCardProps {
   onStop: () => void;
   onRemove: () => void;
   sourceControl?: ReactNode;
+  outputsBar: ReactNode;
 }
 
 export function TrackCard({
@@ -33,6 +34,7 @@ export function TrackCard({
   onStop,
   onRemove,
   sourceControl,
+  outputsBar,
 }: TrackCardProps) {
   const { track } = view;
   const isRunning = track.status === "live" || track.status === "starting";
@@ -51,7 +53,7 @@ export function TrackCard({
           {track.title}
         </span>
         <span className="text-muted-foreground font-mono text-[0.68rem] tracking-wider uppercase">
-          {track.spokenLanguage} → {track.subtitleLanguages.join(" + ")}
+          {track.spokenLanguage} → {track.outputs.map((output) => output.language).join(" + ")}
         </span>
         <TrackStatusBadge status={track.status} />
       </CardHeader>
@@ -63,6 +65,8 @@ export function TrackCard({
           translations={view.translations}
         />
       </CardContent>
+
+      <div className="border-t px-4 py-2.5">{outputsBar}</div>
 
       {sourceControl && isRunning ? (
         <div className="border-t px-4 py-2.5">{sourceControl}</div>

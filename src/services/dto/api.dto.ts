@@ -9,7 +9,20 @@ export interface SessionCostDto {
   audioSeconds: number;
   translationInputTokens: number;
   translationOutputTokens: number;
+  audioUsd: number;
+  translationUsd: number;
   usd: number;
+}
+
+export interface OutputDto {
+  language: string;
+  addedAt: number;
+  segments: number;
+  words: number;
+  inputTokens: number;
+  outputTokens: number;
+  latency: LatencyDto;
+  costUsd: number;
 }
 
 export interface SessionSnapshotDto {
@@ -18,6 +31,7 @@ export interface SessionSnapshotDto {
   status: "starting" | "live" | "ended" | "error";
   sourceLanguage: string;
   targetLanguages: string[];
+  outputs: OutputDto[];
   glossaryId: string;
   createdAt: number;
   startedAt?: number;

@@ -17,7 +17,9 @@ export function StatTile({ label, value, unit, icon: Icon }: StatTileProps) {
       </div>
       <div className="tabular mt-2 font-mono text-2xl leading-none font-medium">
         {value}
-        {unit ? <span className="text-muted-foreground ml-1 text-sm">{unit}</span> : null}
+        {unit ? (
+          <span className="text-muted-foreground ml-1 text-xs font-normal">{unit}</span>
+        ) : null}
       </div>
     </Card>
   );

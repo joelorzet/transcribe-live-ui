@@ -27,6 +27,21 @@ export class SessionService {
     return TrackMapper.fromDtoToModel(dto);
   }
 
+  async addOutput(trackId: string, language: string): Promise<Track> {
+    const dto = await this.http.post<SessionSnapshotDto>(
+      `/api/sessions/${encodeURIComponent(trackId)}/outputs`,
+      { language },
+    );
+    return TrackMapper.fromDtoToModel(dto);
+  }
+
+  async removeOutput(trackId: string, language: string): Promise<Track> {
+    const dto = await this.http.delete<SessionSnapshotDto>(
+      `/api/sessions/${encodeURIComponent(trackId)}/outputs/${encodeURIComponent(language)}`,
+    );
+    return TrackMapper.fromDtoToModel(dto);
+  }
+
   async remove(trackId: string): Promise<void> {
     await this.http.delete<{ removed: true }>(`/api/sessions/${encodeURIComponent(trackId)}`);
   }

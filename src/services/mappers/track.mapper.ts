@@ -1,6 +1,6 @@
 import { toLanguage, toSpokenLanguage } from "@/models/language.model";
 import type { Language } from "@/models/language.model";
-import type { Caption, NewTrack, Track } from "@/models/track.model";
+import type { Caption, NewTrack, Track, TrackOutput } from "@/models/track.model";
 import type { EngineInfo, GlossaryOption } from "@/models/engine.model";
 import type {
   CreateSessionDto,
@@ -17,10 +17,16 @@ export class TrackMapper {
       title: dto.title,
       status: dto.status,
       spokenLanguage: toSpokenLanguage(dto.sourceLanguage),
-      subtitleLanguages: dto.targetLanguages.map((code) => toLanguage(code)),
+      outputs: (dto.outputs ?? []).map((output) => TrackMapper.outputFromDto(output)),
       glossaryId: dto.glossaryId,
       createdAt: dto.createdAt,
       errorMessage: dto.error,
+      cost: {
+        audioSeconds: dto.cost.audioSeconds,
+        audioUsd: dto.cost.audioUsd ?? 0,
+        translationUsd: dto.cost.translationUsd ?? 0,
+        usd: dto.cost.usd,
+      },
       metrics: {
         latencyP50Ms: dto.latency.p50,
         latencyP95Ms: dto.latency.p95,
@@ -31,6 +37,18 @@ export class TrackMapper {
         rotations: dto.rotations,
         viewers: dto.viewers,
       },
+    };
+  }
+
+  static outputFromDto(dto: import("@/services/dto/api.dto").OutputDto): TrackOutput {
+    return {
+      language: toLanguage(dto.language),
+      addedAt: dto.addedAt,
+      segments: dto.segments,
+      words: dto.words,
+      latencyP50Ms: dto.latency.p50,
+      latencyP95Ms: dto.latency.p95,
+      costUsd: dto.costUsd,
     };
   }
 

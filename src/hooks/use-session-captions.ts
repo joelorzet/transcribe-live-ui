@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServices } from "@/contexts/services-context";
 import { useTrackStream } from "@/hooks/use-track-stream";
 import type { Language } from "@/models/language.model";
+import { outputLanguages } from "@/models/track.model";
 import type { TranscriptFormat } from "@/services/transcript.service";
 
 const STORAGE_KEY = "transcribe-live.subtitle-language";
@@ -14,7 +15,7 @@ export function useSessionCaptions(trackId: string, initialLanguage?: Language |
   const [language, setLanguage] = useState<Language | "">(initialLanguage ?? "");
 
   const view = views[trackId];
-  const available = useMemo(() => view?.track.subtitleLanguages ?? [], [view]);
+  const available = useMemo(() => (view ? outputLanguages(view.track) : []), [view]);
 
   useEffect(() => {
     if (language !== "" || initialLanguage) return;

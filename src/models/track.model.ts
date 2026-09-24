@@ -2,6 +2,23 @@ import type { Language, SpokenLanguage } from "@/models/language.model";
 
 export type TrackStatus = "starting" | "live" | "ended" | "error";
 
+export interface TrackOutput {
+  language: Language;
+  addedAt: number;
+  segments: number;
+  words: number;
+  latencyP50Ms: number;
+  latencyP95Ms: number;
+  costUsd: number;
+}
+
+export interface TrackCost {
+  audioSeconds: number;
+  audioUsd: number;
+  translationUsd: number;
+  usd: number;
+}
+
 export interface TrackMetrics {
   latencyP50Ms: number;
   latencyP95Ms: number;
@@ -18,10 +35,11 @@ export interface Track {
   title: string;
   status: TrackStatus;
   spokenLanguage: SpokenLanguage;
-  subtitleLanguages: Language[];
+  outputs: TrackOutput[];
   glossaryId: string;
   createdAt: number;
   metrics: TrackMetrics;
+  cost: TrackCost;
   errorMessage?: string;
 }
 
@@ -39,4 +57,8 @@ export interface NewTrack {
 
 export function isTrackRunning(track: Track): boolean {
   return track.status === "live" || track.status === "starting";
+}
+
+export function outputLanguages(track: Track): Language[] {
+  return track.outputs.map((output) => output.language);
 }

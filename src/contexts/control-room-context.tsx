@@ -25,6 +25,8 @@ interface ControlRoomValue {
   stopIngest: (trackId: string) => Promise<void>;
   stopTrack: (trackId: string) => Promise<void>;
   removeTrack: (trackId: string) => Promise<void>;
+  addOutput: (trackId: string, language: Language) => Promise<void>;
+  removeOutput: (trackId: string, language: Language) => Promise<void>;
   clearEndedTracks: () => Promise<number>;
   transcriptUrl: (trackId: string, format: TranscriptFormat, language?: Language) => string;
 }
@@ -42,13 +44,18 @@ function computeTotals(tracks: TrackView[]): EventTotals {
     : 0;
 
   return {
-    liveTracks: tracks.filter((view) => view.track.status === "live").length,
+    liveInputs: tracks.filter((view) => view.track.status === "live").length,
+    totalInputs: tracks.length,
+    totalOutputs: tracks.reduce((sum, view) => sum + view.track.outputs.length, 0),
     words: tracks.reduce((sum, view) => sum + view.track.metrics.words, 0),
+    audioSeconds: tracks.reduce((sum, view) => sum + view.track.metrics.audioSeconds, 0),
     latencyP50Ms,
     latencyP95Ms: measured.length
       ? Math.max(...measured.map((view) => view.track.metrics.latencyP95Ms))
       : 0,
-    costUsd: tracks.reduce((sum, view) => sum + view.track.metrics.costUsd, 0),
+    audioUsd: tracks.reduce((sum, view) => sum + view.track.cost.audioUsd, 0),
+    translationUsd: tracks.reduce((sum, view) => sum + view.track.cost.translationUsd, 0),
+    costUsd: tracks.reduce((sum, view) => sum + view.track.cost.usd, 0),
   };
 }
 
@@ -153,6 +160,20 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
     removeFromStream(trackId);
   }, [removeFromStream]);
 
+  const addOutput = useCallback(
+    async (trackId: string, language: Language) => {
+      upsert(await sessions.addOutput(trackId, language));
+    },
+    [sessions, upsert],
+  );
+
+  const removeOutput = useCallback(
+    async (trackId: string, language: Language) => {
+      upsert(await sessions.removeOutput(trackId, language));
+    },
+    [sessions, upsert],
+  );
+
   const removeTrack = useCallback(
     async (trackId: string) => {
       await sessions.remove(trackId);
@@ -191,6 +212,8 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
       stopIngest,
       stopTrack,
       removeTrack,
+      addOutput,
+      removeOutput,
       clearEndedTracks,
       transcriptUrl,
     }),
@@ -208,6 +231,8 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
       stopIngest,
       stopTrack,
       removeTrack,
+      addOutput,
+      removeOutput,
       clearEndedTracks,
       transcriptUrl,
     ],

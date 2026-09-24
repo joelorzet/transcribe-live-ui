@@ -50,7 +50,7 @@ export function SessionView({
             <SelectValue placeholder="Original only" />
           </SelectTrigger>
           <SelectContent>
-            {available.map((code) => (
+            {available.map((code: Language) => (
               <SelectItem key={code} value={code}>
                 {code.toUpperCase()} subtitles
               </SelectItem>
