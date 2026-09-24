@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useControlRoom } from "@/contexts/control-room-context";
 
 export function useTrackSource(trackId: string) {
-  const { ingests, startIngest, stopIngest } = useControlRoom();
+  const { ingests, startIngest, startRtmpIngest, stopIngest } = useControlRoom();
   const [value, setValue] = useState("");
   const [isBusy, setIsBusy] = useState(false);
 
@@ -30,6 +30,18 @@ export function useTrackSource(trackId: string) {
     }
   }, [startIngest, trackId, value]);
 
+  const startRtmp = useCallback(async () => {
+    setIsBusy(true);
+    try {
+      await startRtmpIngest(trackId);
+      toast.success("Waiting for an OBS push on the RTMP URL");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not open an RTMP endpoint");
+    } finally {
+      setIsBusy(false);
+    }
+  }, [startRtmpIngest, trackId]);
+
   const stop = useCallback(async () => {
     setIsBusy(true);
     try {
@@ -42,5 +54,5 @@ export function useTrackSource(trackId: string) {
     }
   }, [stopIngest, trackId]);
 
-  return { value, setValue, start, stop, isBusy, ingest };
+  return { value, setValue, start, startRtmp, stop, isBusy, ingest };
 }

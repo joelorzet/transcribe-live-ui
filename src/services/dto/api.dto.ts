@@ -99,9 +99,12 @@ export interface CreateSessionDto {
 
 export interface IngestStatusDto {
   trackId: string;
+  kind: "pull" | "rtmp";
   source: string;
   secondsIngested: number;
   startedAt: number;
+  waitingForPublisher: boolean;
+  pushUrl?: string;
 }
 
 export interface StartIngestDto {

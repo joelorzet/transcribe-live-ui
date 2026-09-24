@@ -22,6 +22,13 @@ export class IngestService {
     );
   }
 
+  async startRtmp(trackId: string): Promise<IngestStatus> {
+    return this.http.post<IngestStatusDto>(
+      `/api/sessions/${encodeURIComponent(trackId)}/ingest/rtmp`,
+      {},
+    );
+  }
+
   async status(trackId: string): Promise<IngestStatus | null> {
     const { ingest } = await this.http.get<{ ingest: IngestStatusDto | null }>(
       `/api/sessions/${encodeURIComponent(trackId)}/ingest`,

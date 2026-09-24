@@ -21,6 +21,7 @@ interface ControlRoomValue {
   ingests: Record<string, IngestStatus>;
   createTrack: (input: NewTrack, mediaSource?: string) => Promise<void>;
   startIngest: (trackId: string, source: string) => Promise<void>;
+  startRtmpIngest: (trackId: string) => Promise<void>;
   stopIngest: (trackId: string) => Promise<void>;
   stopTrack: (trackId: string) => Promise<void>;
   removeTrack: (trackId: string) => Promise<void>;
@@ -91,6 +92,14 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
   const startIngest = useCallback(
     async (trackId: string, source: string) => {
       const status = await ingest.start(trackId, { source });
+      setIngests((current) => ({ ...current, [trackId]: status }));
+    },
+    [ingest],
+  );
+
+  const startRtmpIngest = useCallback(
+    async (trackId: string) => {
+      const status = await ingest.startRtmp(trackId);
       setIngests((current) => ({ ...current, [trackId]: status }));
     },
     [ingest],
@@ -178,6 +187,7 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
       ingests,
       createTrack,
       startIngest,
+      startRtmpIngest,
       stopIngest,
       stopTrack,
       removeTrack,
@@ -194,6 +204,7 @@ export function ControlRoomProvider({ children }: { children: ReactNode }) {
       ingests,
       createTrack,
       startIngest,
+      startRtmpIngest,
       stopIngest,
       stopTrack,
       removeTrack,
