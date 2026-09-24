@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Captions — Transcribe Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/app.css" />
+<style>
+  .viewer { display: flex; flex-direction: column; gap: 20px; min-height: calc(100vh - 180px); }
+  .transcript { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; padding-bottom: 8px; }
+  .line { max-width: 62ch; }
+  .line__label { font-family: var(--font-mono); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; }
+  .line__text { font-size: clamp(1.25rem, 3.2vw, 2rem); line-height: 1.35; margin: 0; overflow-wrap: anywhere; }
+  .line--translated .line__text { color: var(--accent); }
+  .history { border-top: 1px solid var(--border); padding-top: 16px; max-height: 240px; overflow-y: auto; display: flex; flex-direction: column-reverse; gap: 10px; }
+  .history p { margin: 0; color: var(--text-muted); font-size: .95rem; }
+  .history .t { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <a class="brand" href="index.html" style="text-decoration:none;color:inherit">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+      <span id="title">Captions</span>
+    </a>
+    <span class="badge" id="status-badge"><span class="dot"></span><span id="status-text">connecting</span></span>
+    <div class="spacer"></div>
+    <div class="field" style="min-width:150px">
+      <label class="visually-hidden" for="lang">Subtitle language</label>
+      <select id="lang"><option value="">Original only</option></select>
+    </div>
+    <a class="btn btn--sm" id="dl-srt" href="#">SRT</a>
+    <a class="btn btn--sm" id="dl-vtt" href="#">VTT</a>
+    <a class="btn btn--sm" id="dl-txt" href="#">Text</a>
+  </header>
+
+  <div class="viewer">
+    <div class="transcript">
+      <div class="line" id="line-original">
+        <div class="line__label" id="label-original">Original</div>
+        <p class="line__text caption--empty" id="text-original">Waiting for audio…</p>
+      </div>
+      <div class="line line--translated" id="line-translated" hidden>
+        <div class="line__label" id="label-translated">Translation</div>
+        <p class="line__text" id="text-translated"></p>
+      </div>
+    </div>
+    <div class="history" id="history"></div>
+  </div>
+</div>
+<script type="module" src="assets/js/session.js"></script>
+</body>
+</html>
