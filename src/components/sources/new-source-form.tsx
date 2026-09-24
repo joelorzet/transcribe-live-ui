@@ -150,6 +150,25 @@ export function NewSourceForm() {
                 </p>
               ) : null}
 
+              <div className="flex flex-col gap-2 border-t pt-4">
+                <Label htmlFor="watch">
+                  Where the audience watches{" "}
+                  <span className="text-muted-foreground">(optional)</span>
+                </Label>
+                <Input
+                  id="watch"
+                  type="url"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={form.watchUrl}
+                  onChange={(event) => update("watchUrl", event.target.value)}
+                />
+                <p className="text-muted-foreground text-xs">
+                  The public stream people should watch, if it is not the same thing we take audio
+                  from. Typical when production pushes audio from OBS while the room watches the
+                  event livestream. Leave empty to reuse the audio source.
+                </p>
+              </div>
+
               {form.inputMethod === "later" ? (
                 <p className="text-muted-foreground rounded-lg border border-dashed px-3 py-2.5 text-xs">
                   The source is created without audio. Attach a URL or open an RTMP endpoint from its

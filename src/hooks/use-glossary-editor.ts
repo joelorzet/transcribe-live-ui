@@ -18,7 +18,10 @@ export function useGlossaryEditor(glossaryId: string, isOpen: boolean) {
     if (!isOpen || glossaryId === "none") return;
     let cancelled = false;
 
-    setIsLoading(true);
+    void Promise.resolve().then(() => {
+      if (!cancelled) setIsLoading(true);
+    });
+
     glossaries
       .get(glossaryId)
       .then((loaded) => {

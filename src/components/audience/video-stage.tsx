@@ -44,10 +44,10 @@ export function VideoStage({
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/75 text-center">
             <p className="px-6 text-sm text-white/80">
               {serverPositionSeconds === undefined
-                ? "Waiting for the talk to start"
+                ? "This is a live stream, so the player starts where the broadcast is now."
                 : "The player will jump to the point being subtitled right now."}
             </p>
-            <Button size="lg" disabled={!isReady || serverPositionSeconds === undefined} onClick={start}>
+            <Button size="lg" disabled={!isReady} onClick={start}>
               <PlayCircle className="size-5" aria-hidden />
               {isReady ? "Watch with subtitles" : "Loading player"}
             </Button>

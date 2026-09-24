@@ -82,9 +82,11 @@ export function useSyncedPlayer(videoId: string, serverPositionSeconds: number |
 
   const start = useCallback(() => {
     const player = playerRef.current;
+    if (!player) return;
+    // A live broadcast has no position to seek to: both the server and the
+    // viewer are already at "now". Only recorded sources need aligning.
     const target = positionRef.current;
-    if (!player || target === undefined) return;
-    player.seekTo(target, true);
+    if (target !== undefined) player.seekTo(target, true);
     player.playVideo();
     setIsPlaying(true);
   }, []);

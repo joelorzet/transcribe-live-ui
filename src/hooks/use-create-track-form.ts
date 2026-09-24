@@ -15,6 +15,7 @@ interface FormState {
   glossaryId: string;
   inputMethod: InputMethod;
   mediaSource: string;
+  watchUrl: string;
 }
 
 const INITIAL: FormState = {
@@ -24,6 +25,7 @@ const INITIAL: FormState = {
   glossaryId: "nerdearla",
   inputMethod: "pull",
   mediaSource: "",
+  watchUrl: "",
 };
 
 export function useCreateTrackForm() {
@@ -64,6 +66,7 @@ export function useCreateTrackForm() {
           spokenLanguage: toSpokenLanguage(form.spokenLanguage),
           subtitleLanguages: form.outputs,
           glossaryId: form.glossaryId,
+          watchUrl: form.watchUrl.trim() || undefined,
         },
         form.inputMethod === "pull" ? mediaSource : undefined,
       );

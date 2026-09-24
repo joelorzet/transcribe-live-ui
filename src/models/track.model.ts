@@ -38,6 +38,8 @@ export interface Track {
   spokenLanguage: SpokenLanguage;
   outputs: TrackOutput[];
   input: IngestStatus | null;
+  /** Public stream the audience watches, when it differs from what we ingest. */
+  watchUrl?: string;
   glossaryId: string;
   createdAt: number;
   metrics: TrackMetrics;
@@ -55,6 +57,7 @@ export interface NewTrack {
   spokenLanguage: SpokenLanguage;
   subtitleLanguages: Language[];
   glossaryId: string;
+  watchUrl?: string;
 }
 
 export function isTrackRunning(track: Track): boolean {

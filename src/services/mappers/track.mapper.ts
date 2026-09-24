@@ -19,6 +19,7 @@ export class TrackMapper {
       spokenLanguage: toSpokenLanguage(dto.sourceLanguage),
       outputs: (dto.outputs ?? []).map((output) => TrackMapper.outputFromDto(output)),
       input: dto.input ? { ...dto.input, trackId: dto.id } : null,
+      watchUrl: dto.watchUrl,
       glossaryId: dto.glossaryId,
       createdAt: dto.createdAt,
       errorMessage: dto.error,
@@ -63,6 +64,7 @@ export class TrackMapper {
       sourceLanguage: model.spokenLanguage,
       targetLanguages: model.subtitleLanguages.join(","),
       glossaryId: model.glossaryId,
+      watchUrl: model.watchUrl,
     };
   }
 

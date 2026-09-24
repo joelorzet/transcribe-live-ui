@@ -34,7 +34,7 @@ export function SessionView({
   const { view, status, language, available, chooseLanguage, visibleTranslations, downloadUrl } =
     useSessionCaptions(trackId, initialLanguage);
 
-  const video = toEmbeddableVideo(view?.track.input?.source);
+  const video = toEmbeddableVideo(view?.track.watchUrl ?? view?.track.input?.source);
   const translatedText = language ? (visibleTranslations[language] ?? "") : "";
 
   return (

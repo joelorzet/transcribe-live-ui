@@ -33,6 +33,7 @@ export interface SessionSnapshotDto {
   targetLanguages: string[];
   outputs: OutputDto[];
   input: IngestStatusDto | null;
+  watchUrl?: string;
   glossaryId: string;
   createdAt: number;
   startedAt?: number;
@@ -110,6 +111,7 @@ export interface CreateSessionDto {
   sourceLanguage: string;
   targetLanguages: string;
   glossaryId: string;
+  watchUrl?: string;
 }
 
 export interface IngestStatusDto {

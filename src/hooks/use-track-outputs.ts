@@ -17,12 +17,8 @@ export function useTrackOutputs(trackId: string, subtitleLanguages: Language[]) 
     ...DEFAULT_OVERLAY_OPTIONS,
     language: subtitleLanguages[0] ?? "",
   }));
-  const [origin, setOrigin] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
 
   const update = useCallback(<K extends keyof OverlayOptions>(key: K, value: OverlayOptions[K]) => {
     setOptions((current) => ({ ...current, [key]: value }));

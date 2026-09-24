@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Download01, Eye, Share07, StopCircle, Trash01 } from "@untitledui/icons";
+import { ArrowRight, Download01, Eye, StopCircle, Trash01 } from "@untitledui/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
