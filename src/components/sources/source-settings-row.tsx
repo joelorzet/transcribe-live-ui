@@ -30,9 +30,11 @@ export function SourceSettingsRow({
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="source-language" className="text-xs">
-          Spoken language
-        </Label>
+        <div className="flex min-h-8 items-center justify-between gap-2">
+          <Label htmlFor="source-language" className="text-xs">
+            Spoken language
+          </Label>
+        </div>
         <Select
           value={spokenLanguage}
           disabled={disabled || pending === "language"}
@@ -49,13 +51,13 @@ export function SourceSettingsRow({
             ))}
           </SelectContent>
         </Select>
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground mt-auto text-xs">
           Changing this reconnects the speech model without dropping the source.
         </p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex min-h-8 items-center justify-between gap-2">
           <Label htmlFor="source-glossary" className="text-xs">
             Glossary
           </Label>
@@ -77,7 +79,7 @@ export function SourceSettingsRow({
             ))}
           </SelectContent>
         </Select>
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground mt-auto text-xs">
           Terms the speech model should recognise and the translator must keep.
         </p>
       </div>

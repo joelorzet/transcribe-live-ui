@@ -10,6 +10,7 @@ import { useTrackActions } from "@/hooks/use-track-actions";
 import { Topbar } from "@/components/control-room/topbar";
 import { TotalsGrid } from "@/components/control-room/totals-grid";
 import { HealthPanel } from "@/components/control-room/health-panel";
+import { AudienceLinkDialog } from "@/components/control-room/audience-link-dialog";
 import { TrackCard } from "@/components/control-room/track-card";
 import { EmptyTracks } from "@/components/control-room/empty-tracks";
 
@@ -44,6 +45,7 @@ export function ControlRoomView() {
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-lg font-semibold">Control room</h1>
           <div className="flex-1" />
+          <AudienceLinkDialog />
           <Button asChild>
             <Link href="/sources/new">
               <Plus className="size-4" aria-hidden /> New source
