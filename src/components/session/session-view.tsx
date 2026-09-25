@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ArrowLeft, Download01 } from "@untitledui/icons";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -36,6 +35,15 @@ export function SessionView({
 
   const video = toEmbeddableVideo(view?.track.watchUrl ?? view?.track.input?.source);
   const translatedText = language ? (visibleTranslations[language] ?? "") : "";
+
+  // Compensate with the lag actually measured for the line being read: an
+  // output's p50 covers transcription plus its own translation hop.
+  const selectedOutput = view?.track.outputs.find((output) => output.language === language);
+  const captionLagMs =
+    selectedOutput?.latencyP95Ms ||
+    selectedOutput?.latencyP50Ms ||
+    view?.track.metrics.latencyP95Ms ||
+    2500;
 
   // A talk can be on air with its video playing while nothing is feeding audio
   // in. Saying so beats an empty caption area that looks like a broken page.
@@ -102,6 +110,7 @@ export function SessionView({
             translated={translatedText}
             showOriginal={!language}
             serverPositionSeconds={view?.track.input?.positionSeconds}
+            captionLagMs={captionLagMs}
           />
         ) : (
           <div className="flex flex-1 flex-col justify-end">
@@ -115,22 +124,6 @@ export function SessionView({
         )}
       </main>
 
-      {view && view.history.length > 0 ? (
-        <ScrollArea className="h-56 border-t pt-4">
-          <div className="text-muted-foreground flex flex-col gap-3 pr-4 text-sm">
-            {view.history.map((line, index) => (
-              <div key={`${line.original}-${index}`}>
-                <p>{line.original}</p>
-                {Object.entries(line.translations).map(([code, text]) => (
-                  <p key={code} className="text-primary/80">
-                    {text}
-                  </p>
-                ))}
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-      ) : null}
     </div>
   );
 }

@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { PlayCircle, RefreshCw01 } from "@untitledui/icons";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useYouTubePlayer } from "@/hooks/use-youtube-player";
 import { toDisplayCaption } from "@/lib/caption";
-import { buildEmbedUrl, type EmbeddableVideo } from "@/lib/video";
+import type { EmbeddableVideo } from "@/lib/video";
 
 interface VideoStageProps {
   video: EmbeddableVideo;
@@ -13,7 +15,11 @@ interface VideoStageProps {
   translated: string;
   showOriginal: boolean;
   serverPositionSeconds: number | undefined;
+  captionLagMs: number;
 }
+
+const MIN_LAG_S = 0.5;
+const MAX_LAG_S = 8;
 
 export function VideoStage({
   video,
@@ -22,72 +28,90 @@ export function VideoStage({
   translated,
   showOriginal,
   serverPositionSeconds,
+  captionLagMs,
 }: VideoStageProps) {
-  // Remounting the iframe with a fresh offset is how both starting and
-  // resyncing work, so the key carries the offset it was opened at.
-  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const { hostRef, isReady, state, startAt } = useYouTubePlayer(video.id);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [nudge, setNudge] = useState(0);
 
-  const spoken = interim || original;
   const isLive = serverPositionSeconds === undefined;
-  const isPlaying = startedAt !== null;
+  const lag = Math.min(MAX_LAG_S, Math.max(MIN_LAG_S, captionLagMs / 1000));
+  const offset = lag + nudge;
+  const isPaused = hasStarted && (state === "paused" || state === "ended");
 
-  const play = () => setStartedAt(serverPositionSeconds ?? 0);
+  const sync = (extraNudge = 0) => {
+    setNudge((current) => current + extraNudge);
+    setHasStarted(true);
+    startAt(serverPositionSeconds === undefined ? 0 : serverPositionSeconds - (offset + extraNudge));
+  };
 
   return (
     <div className="flex flex-col gap-3">
       <div className="relative w-full overflow-hidden rounded-xl border bg-black">
-        <div className="aspect-video w-full">
-          {isPlaying ? (
-            <iframe
-              key={startedAt}
-              src={buildEmbedUrl(video.id, isLive ? undefined : startedAt)}
-              title="Live talk"
-              className="size-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          ) : null}
-        </div>
+        <div ref={hostRef} className="aspect-video w-full" />
 
-        {!isPlaying ? (
+        {!hasStarted ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/75 px-6 text-center">
             <p className="text-sm text-white/80">
               {isLive
                 ? "This is a live broadcast, so it opens where the stream is now."
-                : "The player opens at the point being subtitled right now."}
+                : `Opening ${offset.toFixed(1)}s earlier so the subtitles land in time.`}
             </p>
-            <Button size="lg" onClick={play}>
-              <PlayCircle className="size-5" aria-hidden /> Watch with subtitles
+            <Button size="lg" disabled={!isReady} onClick={() => sync()}>
+              <PlayCircle className="size-5" aria-hidden />
+              {isReady ? "Watch with subtitles" : "Loading"}
             </Button>
           </div>
         ) : null}
 
-        {isPlaying && (translated || spoken) ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-1.5 p-3 sm:p-5">
-            {showOriginal && spoken ? (
-              <p className="max-w-3xl rounded-lg bg-black/80 px-3 py-1.5 text-center text-sm leading-snug text-white/90 sm:text-base">
-                {toDisplayCaption(spoken, 120)}
+        {isPaused ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80 px-6 text-center">
+            <p className="max-w-sm text-sm text-white/85">
+              The talk carries on while you are paused, so the subtitles have moved ahead of the
+              picture.
+            </p>
+            <Button size="lg" onClick={() => sync()}>
+              <RefreshCw01 className="size-5" aria-hidden /> Catch up to live
+            </Button>
+          </div>
+        ) : null}
+
+        {hasStarted && !isPaused && (translated || interim || original) ? (
+          <div className="pointer-events-none absolute inset-x-0 bottom-[14%] flex flex-col items-center gap-1 px-4">
+            {showOriginal && (interim || original) ? (
+              <p className="max-w-[46ch] text-center text-[clamp(13px,1.5vw,17px)] leading-snug text-white/75 [text-shadow:0_2px_6px_rgb(0_0_0/0.95)]">
+                {toDisplayCaption(interim || original, 110)}
               </p>
             ) : null}
             {translated ? (
-              <p className="text-primary max-w-3xl rounded-lg bg-black/85 px-4 py-2 text-center text-base leading-snug font-semibold sm:text-xl">
-                {toDisplayCaption(translated, 140)}
+              <p className="max-w-[46ch] text-center text-[clamp(17px,2.3vw,30px)] leading-[1.35] font-medium text-white [text-shadow:0_2px_4px_rgb(0_0_0/0.98),0_0_14px_rgb(0_0_0/0.85)]">
+                {toDisplayCaption(translated, 130)}
               </p>
             ) : null}
           </div>
         ) : null}
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <p className="text-muted-foreground text-xs">
-          Subtitles are generated from the audio, so they trail the picture by a second or two.
-        </p>
-        {isPlaying && !isLive ? (
-          <Button variant="ghost" size="sm" onClick={play}>
-            <RefreshCw01 className="size-3.5" aria-hidden /> Resync with subtitles
+      {hasStarted && !isLive ? (
+        <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+          <Badge variant="outline" className="border-primary/50 text-primary gap-1.5 text-[0.68rem]">
+            <span className="size-1.5 animate-pulse rounded-full bg-current" />
+            following the talk
+          </Badge>
+          <span className="text-muted-foreground">Subtitles out of step?</span>
+          <Button variant="outline" size="sm" onClick={() => sync(-1)}>
+            Video later
           </Button>
-        ) : null}
-      </div>
+          <span className="text-muted-foreground tabular font-mono">{offset.toFixed(1)}s</span>
+          <Button variant="outline" size="sm" onClick={() => sync(1)}>
+            Video earlier
+          </Button>
+        </div>
+      ) : (
+        <p className="text-muted-foreground text-center text-xs">
+          Subtitles are generated from the audio as the talk happens.
+        </p>
+      )}
     </div>
   );
 }
