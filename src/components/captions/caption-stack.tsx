@@ -10,7 +10,11 @@ interface CaptionStackProps {
 }
 
 export function CaptionStack({ interim, original, translations, size = "card" }: CaptionStackProps) {
-  const entries = Object.entries(translations) as [Language, string][];
+  // A translation identical to what was said adds a duplicate line, which
+  // happens when the configured spoken language does not match the audio.
+  const entries = (Object.entries(translations) as [Language, string][]).filter(
+    ([, text]) => text.trim() !== "" && text.trim() !== original.trim(),
+  );
   const isEmpty = !interim && !original && entries.length === 0;
 
   if (isEmpty) {

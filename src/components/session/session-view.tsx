@@ -110,8 +110,8 @@ export function SessionView({
         ) : (
           <div className="flex flex-1 flex-col justify-end pb-6">
             <CaptionStack
-              interim={captions.interim}
-              original={captions.original}
+              interim={language ? "" : captions.interim}
+              original={language ? "" : captions.original}
               translations={language ? { [language]: captions.translated } : {}}
               size="stage"
             />

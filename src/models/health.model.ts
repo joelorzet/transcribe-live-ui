@@ -20,6 +20,13 @@ export function findIssues(tracks: Track[]): Issue[] {
   for (const track of tracks) {
     const base = { trackId: track.id, trackTitle: track.title };
 
+    // A track can be transcribing happily while its translations fail, so an
+    // error message matters even when the track itself is still live.
+    if (track.status !== "error" && track.errorMessage) {
+      issues.push({ ...base, kind: "error", detail: track.errorMessage });
+      continue;
+    }
+
     if (track.status === "error") {
       issues.push({
         ...base,
