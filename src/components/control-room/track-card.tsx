@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { CaptionStack } from "@/components/captions/caption-stack";
 import { TrackOutputsSummary } from "@/components/control-room/track-outputs-summary";
@@ -43,7 +43,12 @@ export function TrackCard({
   ];
 
   return (
-    <Card className={cn("gap-0 overflow-hidden py-0", track.status === "live" && "border-primary/40")}>
+    <Card
+      className={cn(
+        "flex h-full flex-col gap-0 overflow-hidden py-0",
+        track.status === "live" && "border-primary/40",
+      )}
+    >
       <CardHeader className="flex flex-row flex-wrap items-center gap-2 border-b px-4 py-3">
         <Link
           href={`/sources/${track.id}`}
@@ -63,7 +68,7 @@ export function TrackCard({
         <TrackStatusBadge status={track.status} />
       </CardHeader>
 
-      <CardContent className="min-h-32 px-4 py-4">
+      <CardContent className="h-32 overflow-hidden px-4 py-4">
         <CaptionStack
           interim={view.interim}
           original={view.original}
@@ -71,7 +76,7 @@ export function TrackCard({
         />
       </CardContent>
 
-      <div className="border-t px-4 py-2.5">
+      <div className="mt-auto border-t px-4 py-2.5">
         <TrackOutputsSummary outputs={track.outputs} />
       </div>
 
@@ -89,35 +94,37 @@ export function TrackCard({
       <CardFooter className="flex flex-wrap gap-2 px-4 py-3">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/sources/${track.id}`}>
-                <ArrowRight className="size-3.5" aria-hidden /> Manage
-              </Link>
-            </Button>
+            <Link
+              href={`/sources/${track.id}`}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer")}
+            >
+              <ArrowRight className="size-3.5" aria-hidden /> Manage
+            </Link>
           </TooltipTrigger>
           <TooltipContent>Open this source to change its audio input and output languages</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button asChild variant="ghost" size="sm">
-              <Link href={`/session/${track.id}`} target="_blank">
-                <Eye className="size-3.5" aria-hidden /> Captions
-              </Link>
-            </Button>
+            <Link
+              href={`/session/${track.id}`}
+              target="_blank"
+              className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "cursor-pointer")}
+            >
+              <Eye className="size-3.5" aria-hidden /> Captions
+            </Link>
           </TooltipTrigger>
           <TooltipContent>Full screen subtitles for the audience</TooltipContent>
         </Tooltip>
         <DropdownMenu>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Download01 className="size-3.5" aria-hidden /> Export
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent>Download the transcript as subtitles or plain text</TooltipContent>
-          </Tooltip>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              title="Download the transcript as subtitles or plain text"
+            >
+              <Download01 className="size-3.5" aria-hidden /> Export
+            </Button>
+          </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             {downloads.map((download) => (
               <DropdownMenuItem key={download.label} asChild>

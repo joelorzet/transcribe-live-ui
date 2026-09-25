@@ -1,11 +1,10 @@
 "use client";
 
-import { PlayCircle } from "@untitledui/icons";
+import { useState } from "react";
+import { PlayCircle, RefreshCw01 } from "@untitledui/icons";
 import { Button } from "@/components/ui/button";
-import { useSyncedPlayer } from "@/hooks/use-synced-player";
 import { toDisplayCaption } from "@/lib/caption";
-import { cn } from "@/lib/utils";
-import type { EmbeddableVideo } from "@/lib/video";
+import { buildEmbedUrl, type EmbeddableVideo } from "@/lib/video";
 
 interface VideoStageProps {
   video: EmbeddableVideo;
@@ -24,37 +23,46 @@ export function VideoStage({
   showOriginal,
   serverPositionSeconds,
 }: VideoStageProps) {
-  const { containerRef, isReady, isPlaying, start, driftSeconds } = useSyncedPlayer(
-    video.id,
-    serverPositionSeconds,
-  );
+  // Remounting the iframe with a fresh offset is how both starting and
+  // resyncing work, so the key carries the offset it was opened at.
+  const [startedAt, setStartedAt] = useState<number | null>(null);
 
   const spoken = interim || original;
-  const hasCaption = Boolean(translated || spoken);
-  const drifted = Math.abs(driftSeconds) > 2;
+  const isLive = serverPositionSeconds === undefined;
+  const isPlaying = startedAt !== null;
+
+  const play = () => setStartedAt(serverPositionSeconds ?? 0);
 
   return (
     <div className="flex flex-col gap-3">
       <div className="relative w-full overflow-hidden rounded-xl border bg-black">
         <div className="aspect-video w-full">
-          <div ref={containerRef} className="size-full" />
+          {isPlaying ? (
+            <iframe
+              key={startedAt}
+              src={buildEmbedUrl(video.id, isLive ? undefined : startedAt)}
+              title="Live talk"
+              className="size-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : null}
         </div>
 
         {!isPlaying ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/75 text-center">
-            <p className="px-6 text-sm text-white/80">
-              {serverPositionSeconds === undefined
-                ? "This is a live stream, so the player starts where the broadcast is now."
-                : "The player will jump to the point being subtitled right now."}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/75 px-6 text-center">
+            <p className="text-sm text-white/80">
+              {isLive
+                ? "This is a live broadcast, so it opens where the stream is now."
+                : "The player opens at the point being subtitled right now."}
             </p>
-            <Button size="lg" disabled={!isReady} onClick={start}>
-              <PlayCircle className="size-5" aria-hidden />
-              {isReady ? "Watch with subtitles" : "Loading player"}
+            <Button size="lg" onClick={play}>
+              <PlayCircle className="size-5" aria-hidden /> Watch with subtitles
             </Button>
           </div>
         ) : null}
 
-        {isPlaying && hasCaption ? (
+        {isPlaying && (translated || spoken) ? (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-1.5 p-3 sm:p-5">
             {showOriginal && spoken ? (
               <p className="max-w-3xl rounded-lg bg-black/80 px-3 py-1.5 text-center text-sm leading-snug text-white/90 sm:text-base">
@@ -70,18 +78,16 @@ export function VideoStage({
         ) : null}
       </div>
 
-      <p
-        className={cn(
-          "text-center text-xs",
-          drifted ? "text-amber-400" : "text-muted-foreground",
-        )}
-      >
-        {isPlaying
-          ? drifted
-            ? `Realigning the video with the subtitles (${driftSeconds > 0 ? "ahead" : "behind"} by ${Math.abs(Math.round(driftSeconds))}s)`
-            : "Video and subtitles are aligned. Subtitles are generated from the audio, so they trail the picture by a second or two."
-          : "Subtitles are generated live from this talk's audio."}
-      </p>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <p className="text-muted-foreground text-xs">
+          Subtitles are generated from the audio, so they trail the picture by a second or two.
+        </p>
+        {isPlaying && !isLive ? (
+          <Button variant="ghost" size="sm" onClick={play}>
+            <RefreshCw01 className="size-3.5" aria-hidden /> Resync with subtitles
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -37,6 +37,19 @@ export function SessionView({
   const video = toEmbeddableVideo(view?.track.watchUrl ?? view?.track.input?.source);
   const translatedText = language ? (visibleTranslations[language] ?? "") : "";
 
+  // A talk can be on air with its video playing while nothing is feeding audio
+  // in. Saying so beats an empty caption area that looks like a broken page.
+  const track = view?.track;
+  const subtitleNotice = !track
+    ? null
+    : !track.input
+      ? "No audio is reaching this talk yet, so there are no subtitles."
+      : track.input.waitingForPublisher
+        ? "Waiting for the room to start streaming. Subtitles begin as soon as audio arrives."
+        : track.metrics.segments === 0
+          ? "Audio is arriving. The first subtitles appear in a moment."
+          : null;
+
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[1200px] flex-col px-4 pb-10 sm:px-6">
       <header className="bg-background/90 sticky top-0 z-30 mb-6 flex flex-wrap items-center gap-3 border-b py-4 backdrop-blur">
@@ -75,6 +88,12 @@ export function SessionView({
       </header>
 
       <main className="flex flex-1 flex-col justify-center gap-6 pb-6">
+        {subtitleNotice ? (
+          <p className="text-muted-foreground rounded-lg border border-dashed px-4 py-3 text-center text-sm">
+            {subtitleNotice}
+          </p>
+        ) : null}
+
         {video ? (
           <VideoStage
             video={video}

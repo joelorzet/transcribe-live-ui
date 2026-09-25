@@ -3,8 +3,8 @@ import { ServicesProvider } from "@/contexts/services-context";
 import { AudienceIndex } from "@/components/audience/audience-index";
 
 export const metadata: Metadata = {
-  title: "Subtítulos en vivo",
-  description: "Elegí la charla y el idioma de los subtítulos.",
+  title: "Live subtitles",
+  description: "Pick a talk and the language you want to read it in.",
 };
 
 export default function AudiencePage() {

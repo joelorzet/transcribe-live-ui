@@ -16,16 +16,16 @@ export function AudienceIndex() {
     <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
       <header className="mb-8 text-center">
         <Microphone01 className="text-primary mx-auto mb-3 size-8" aria-hidden />
-        <h1 className="text-2xl font-bold tracking-tight">Subtítulos en vivo</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Live subtitles</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Elegí la charla y el idioma. Live subtitles: pick a talk and a language.
+          Pick a talk, then the language you want to read it in.
         </p>
       </header>
 
       {live.length === 0 ? (
         <div className="text-muted-foreground rounded-xl border border-dashed px-6 py-14 text-center text-sm">
-          <p className="font-medium">No hay charlas en vivo ahora</p>
-          <p className="mt-1">No talks are live right now. This page updates by itself.</p>
+          <p className="font-medium">Nothing is live right now</p>
+          <p className="mt-1">This page updates by itself when a talk starts.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -38,15 +38,15 @@ export function AudienceIndex() {
                   className="border-primary/50 bg-primary/10 text-primary gap-1.5 font-mono text-[0.68rem] tracking-wider uppercase"
                 >
                   <span className="size-1.5 animate-pulse rounded-full bg-current" />
-                  en vivo
+                  live
                 </Badge>
               </div>
 
               <p className="text-muted-foreground mb-3 text-xs">
-                Se habla en{" "}
+                Spoken in{" "}
                 <span className="text-foreground font-medium">
                   {track.spokenLanguage === "auto"
-                    ? "idioma detectado automáticamente"
+                    ? "a language detected automatically"
                     : languageLabel(track.spokenLanguage as Language)}
                 </span>
               </p>

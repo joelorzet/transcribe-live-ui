@@ -89,7 +89,7 @@ export function ControlRoomView() {
               No sources match these filters.
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-2">
               {visible.map((view) => (
                 <TrackCard
                   key={view.track.id}

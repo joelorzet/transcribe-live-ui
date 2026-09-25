@@ -24,16 +24,23 @@ export function toEmbeddableVideo(source: string | undefined | null): Embeddable
 
   if (!id || !/^[\w-]{6,20}$/.test(id)) return null;
 
+  return { provider: "youtube", id, embedUrl: buildEmbedUrl(id) };
+}
+
+/**
+ * Subtitles describe the point the server is transcribing, so the player has to
+ * open there. Passing the offset in the embed URL aligns it on load, which is
+ * far more dependable than driving the IFrame API and racing its readiness.
+ */
+export function buildEmbedUrl(videoId: string, startSeconds?: number): string {
   const params = new URLSearchParams({
-    autoplay: "0",
+    autoplay: "1",
     modestbranding: "1",
     rel: "0",
     playsinline: "1",
   });
-
-  return {
-    provider: "youtube",
-    id,
-    embedUrl: `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`,
-  };
+  if (startSeconds !== undefined && startSeconds > 0) {
+    params.set("start", String(Math.floor(startSeconds)));
+  }
+  return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
 }
