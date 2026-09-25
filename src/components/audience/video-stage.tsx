@@ -19,7 +19,7 @@ interface VideoStageProps {
 }
 
 const MIN_LAG_S = 0.5;
-const MAX_LAG_S = 8;
+const MAX_LAG_S = 4;
 
 export function VideoStage({
   video,
@@ -94,9 +94,19 @@ export function VideoStage({
 
       {hasStarted && !isLive ? (
         <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
-          <Badge variant="outline" className="border-primary/50 text-primary gap-1.5 text-[0.68rem]">
-            <span className="size-1.5 animate-pulse rounded-full bg-current" />
-            following the talk
+          <Badge
+            variant="outline"
+            className={
+              state === "playing"
+                ? "border-primary/50 text-primary gap-1.5 text-[0.68rem]"
+                : "gap-1.5 border-amber-500/50 text-amber-400 text-[0.68rem]"
+            }
+            title="What the player reports it is doing"
+          >
+            <span
+              className={`size-1.5 rounded-full bg-current ${state === "playing" ? "animate-pulse" : ""}`}
+            />
+            player: {state}
           </Badge>
           <span className="text-muted-foreground">Subtitles out of step?</span>
           <Button variant="outline" size="sm" onClick={() => sync(-1)}>

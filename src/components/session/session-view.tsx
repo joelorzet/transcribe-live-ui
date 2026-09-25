@@ -39,11 +39,10 @@ export function SessionView({
   // Compensate with the lag actually measured for the line being read: an
   // output's p50 covers transcription plus its own translation hop.
   const selectedOutput = view?.track.outputs.find((output) => output.language === language);
+  // p50, not p95: the tail is inflated by reconnects and slow translations, and
+  // compensating for the worst case pushes the picture a long way behind.
   const captionLagMs =
-    selectedOutput?.latencyP95Ms ||
-    selectedOutput?.latencyP50Ms ||
-    view?.track.metrics.latencyP95Ms ||
-    2500;
+    selectedOutput?.latencyP50Ms || view?.track.metrics.latencyP50Ms || 1500;
 
   // A talk can be on air with its video playing while nothing is feeding audio
   // in. Saying so beats an empty caption area that looks like a broken page.
