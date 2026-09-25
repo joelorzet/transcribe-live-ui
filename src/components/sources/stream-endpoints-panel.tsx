@@ -65,6 +65,8 @@ function Endpoint({
   );
 }
 
+const ORIGINAL = "original";
+
 export function StreamEndpointsPanel({
   trackId,
   outputs,
@@ -73,14 +75,15 @@ export function StreamEndpointsPanel({
   outputs: TrackOutput[];
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [language, setLanguage] = useState<string>(outputs[0]?.language ?? "");
+  const [language, setLanguage] = useState<string>(outputs[0]?.language ?? ORIGINAL);
 
   const api = apiBaseUrl();
   const ws = wsBaseUrl();
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const id = encodeURIComponent(trackId);
-  const suffix = language ? `&lang=${language}` : "";
-  const questionSuffix = language ? `?lang=${language}` : "";
+  const chosen = language === ORIGINAL ? "" : language;
+  const suffix = chosen ? `&lang=${chosen}` : "";
+  const questionSuffix = chosen ? `?lang=${chosen}` : "";
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="rounded-xl border">
@@ -110,7 +113,7 @@ export function StreamEndpointsPanel({
               <SelectValue placeholder="Original (no translation)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Original (no translation)</SelectItem>
+              <SelectItem value={ORIGINAL}>Original (no translation)</SelectItem>
               {outputs.map((output) => (
                 <SelectItem key={output.language} value={output.language}>
                   {languageLabel(output.language as Language)}
@@ -131,7 +134,7 @@ export function StreamEndpointsPanel({
           label="WebSocket feed"
           hint="Same events over a socket, for players and encoders that already speak WebSocket."
           value={`${ws}/ws/view?sessionId=${id}${suffix}`}
-          example={`{ "type": "segment.translated", "translation": { "language": "${language || "es"}", "text": "..." } }`}
+          example={`{ "type": "segment.translated", "translation": { "language": "${chosen || "es"}", "text": "..." } }`}
         />
 
         <Endpoint

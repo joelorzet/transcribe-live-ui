@@ -50,6 +50,8 @@ function UrlRow({ url, label, onCopy }: { url: string; label: string; onCopy: ()
   );
 }
 
+const ORIGINAL = "original";
+
 export function TrackOutputsDialog({
   trackId,
   trackTitle,
@@ -62,7 +64,7 @@ export function TrackOutputsDialog({
   );
 
   const languageOptions = [
-    { value: "", label: "Original (no translation)" },
+    { value: ORIGINAL, label: "Original (no translation)" },
     ...subtitleLanguages.map((code) => ({ value: code, label: languageLabel(code) })),
   ];
 
@@ -81,15 +83,15 @@ export function TrackOutputsDialog({
         <div className="flex flex-col gap-2">
           <Label htmlFor="output-language">Subtitle language</Label>
           <Select
-            value={options.language}
-            onValueChange={(value) => update("language", value as Language | "")}
+            value={options.language || ORIGINAL}
+            onValueChange={(value) => update("language", (value === ORIGINAL ? "" : value) as Language | "")}
           >
             <SelectTrigger id="output-language" className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {languageOptions.map((option) => (
-                <SelectItem key={option.value || "original"} value={option.value}>
+                <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
               ))}
