@@ -1,7 +1,9 @@
 import type { Language } from "@/models/language.model";
 import type { Track } from "@/models/track.model";
+import type { AudienceSession } from "@/models/audience.model";
 
 export type TrackEvent =
+  | { kind: "session"; view: AudienceSession }
   | { kind: "tracks"; tracks: Track[] }
   | { kind: "track"; track: Track }
   | { kind: "interim"; trackId: string; text: string }

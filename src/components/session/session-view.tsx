@@ -3,25 +3,15 @@
 import Link from "next/link";
 import { ArrowLeft, Download01 } from "@untitledui/icons";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { CaptionStack } from "@/components/captions/caption-stack";
 import { VideoStage } from "@/components/audience/video-stage";
+import { useAudienceSession } from "@/hooks/use-audience-session";
+import { useServices } from "@/contexts/services-context";
 import { toEmbeddableVideo } from "@/lib/video";
-import { ConnectionBadge, TrackStatusBadge } from "@/components/control-room/status-badge";
-import { useSessionCaptions } from "@/hooks/use-session-captions";
-import type { Language } from "@/models/language.model";
-
-const FORMATS: { format: "srt" | "vtt" | "txt"; label: string }[] = [
-  { format: "srt", label: "SRT" },
-  { format: "vtt", label: "VTT" },
-  { format: "txt", label: "Text" },
-];
+import { cn } from "@/lib/utils";
+import { subtitleNotice } from "@/models/audience.model";
+import { languageLabel, type Language } from "@/models/language.model";
 
 export function SessionView({
   trackId,
@@ -30,99 +20,112 @@ export function SessionView({
   trackId: string;
   initialLanguage?: Language | "";
 }) {
-  const { view, status, language, available, chooseLanguage, visibleTranslations, downloadUrl } =
-    useSessionCaptions(trackId, initialLanguage);
+  const { transcripts } = useServices();
+  const { session, captions, status, language, available, chooseLanguage } = useAudienceSession(
+    trackId,
+    initialLanguage,
+  );
 
-  const video = toEmbeddableVideo(view?.track.watchUrl ?? view?.track.input?.source);
-  const translatedText = language ? (visibleTranslations[language] ?? "") : "";
-
-  // Compensate with the lag actually measured for the line being read: an
-  // output's p50 covers transcription plus its own translation hop.
-  const selectedOutput = view?.track.outputs.find((output) => output.language === language);
-  // p50, not p95: the tail is inflated by reconnects and slow translations, and
-  // compensating for the worst case pushes the picture a long way behind.
-  const captionLagMs =
-    selectedOutput?.latencyP50Ms || view?.track.metrics.latencyP50Ms || 1500;
-
-  // A talk can be on air with its video playing while nothing is feeding audio
-  // in. Saying so beats an empty caption area that looks like a broken page.
-  const track = view?.track;
-  const subtitleNotice = !track
-    ? null
-    : !track.input
-      ? "No audio is reaching this talk yet, so there are no subtitles."
-      : track.input.waitingForPublisher
-        ? "Waiting for the room to start streaming. Subtitles begin as soon as audio arrives."
-        : track.metrics.segments === 0
-          ? "Audio is arriving. The first subtitles appear in a moment."
-          : null;
+  const video = toEmbeddableVideo(session?.watchUrl);
+  const notice = subtitleNotice(session);
+  const isLive = session?.status === "live" || session?.status === "starting";
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[1200px] flex-col px-4 pb-10 sm:px-6">
-      <header className="bg-background/90 sticky top-0 z-30 mb-6 flex flex-wrap items-center gap-3 border-b py-4 backdrop-blur">
+    <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-5 px-4 pb-10 sm:px-6">
+      <header className="bg-background/90 sticky top-0 z-30 flex flex-wrap items-center gap-3 border-b py-4 backdrop-blur">
         <Button asChild variant="ghost" size="sm">
           <Link href="/live">
             <ArrowLeft className="size-4" aria-hidden /> All talks
           </Link>
         </Button>
-        <span className="truncate font-semibold">{view?.track.title ?? trackId}</span>
-        {view ? <TrackStatusBadge status={view.track.status} /> : null}
-
-        <div className="flex-1" />
-
-        <Select value={language} onValueChange={(value) => chooseLanguage(value as Language)}>
-          <SelectTrigger size="sm" className="w-36">
-            <SelectValue placeholder="Original only" />
-          </SelectTrigger>
-          <SelectContent>
-            {available.map((code: Language) => (
-              <SelectItem key={code} value={code}>
-                {code.toUpperCase()} subtitles
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {FORMATS.map(({ format, label }) => (
-          <Button key={format} asChild variant="outline" size="sm">
-            <a href={downloadUrl(format)}>
-              <Download01 className="size-3.5" aria-hidden /> {label}
-            </a>
-          </Button>
-        ))}
-
-        <ConnectionBadge status={status} />
+        <h1 className="min-w-0 flex-1 truncate text-base font-semibold">
+          {session?.title ?? "Live subtitles"}
+        </h1>
+        {isLive ? (
+          <Badge
+            variant="outline"
+            className="border-primary/50 bg-primary/10 text-primary gap-1.5 font-mono text-[0.68rem] tracking-wider uppercase"
+          >
+            <span className="size-1.5 animate-pulse rounded-full bg-current" />
+            live
+          </Badge>
+        ) : null}
+        {status !== "connected" ? (
+          <Badge variant="outline" className="border-amber-500/50 text-amber-400 text-[0.68rem]">
+            reconnecting
+          </Badge>
+        ) : null}
       </header>
 
-      <main className="flex flex-1 flex-col justify-center gap-6 pb-6">
-        {subtitleNotice ? (
-          <p className="text-muted-foreground rounded-lg border border-dashed px-4 py-3 text-center text-sm">
-            {subtitleNotice}
-          </p>
-        ) : null}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-muted-foreground text-sm">Read it in</span>
+        <button
+          type="button"
+          aria-pressed={language === ""}
+          onClick={() => chooseLanguage("")}
+          className={cn(
+            "cursor-pointer rounded-full border px-3.5 py-1.5 text-sm transition-colors",
+            language === ""
+              ? "border-foreground/40 bg-foreground/10 font-medium"
+              : "border-border text-muted-foreground hover:border-muted-foreground",
+          )}
+        >
+          {session ? `Original (${languageLabel(session.spokenLanguage)})` : "Original"}
+        </button>
+        {available.map((code) => (
+          <button
+            key={code}
+            type="button"
+            aria-pressed={language === code}
+            onClick={() => chooseLanguage(code)}
+            className={cn(
+              "cursor-pointer rounded-full border px-3.5 py-1.5 text-sm transition-colors",
+              language === code
+                ? "border-primary bg-primary/15 text-primary font-medium"
+                : "border-border text-muted-foreground hover:border-muted-foreground",
+            )}
+          >
+            {languageLabel(code)}
+          </button>
+        ))}
+      </div>
 
+      {notice ? (
+        <p className="text-muted-foreground rounded-lg border border-dashed px-4 py-3 text-center text-sm">
+          {notice}
+        </p>
+      ) : null}
+
+      <main className="flex flex-1 flex-col justify-center gap-5">
         {video ? (
           <VideoStage
             video={video}
-            original={view?.original ?? ""}
-            interim={view?.interim ?? ""}
-            translated={translatedText}
-            showOriginal={!language}
-            serverPositionSeconds={view?.track.input?.positionSeconds}
-            captionLagMs={captionLagMs}
+            original={captions.original}
+            interim={captions.interim}
+            translated={captions.translated}
+            showOriginal={language === ""}
+            serverPositionSeconds={session?.positionSeconds}
+            captionLagMs={session?.captionLagMs ?? 1500}
           />
         ) : (
-          <div className="flex flex-1 flex-col justify-end">
+          <div className="flex flex-1 flex-col justify-end pb-6">
             <CaptionStack
-              interim={view?.interim ?? ""}
-              original={view?.original ?? ""}
-              translations={visibleTranslations}
+              interim={captions.interim}
+              original={captions.original}
+              translations={language ? { [language]: captions.translated } : {}}
               size="stage"
             />
           </div>
         )}
       </main>
 
+      <footer className="flex justify-center border-t pt-4">
+        <Button asChild variant="ghost" size="sm">
+          <a href={transcripts.downloadUrl(trackId, "txt", language || undefined)}>
+            <Download01 className="size-3.5" aria-hidden /> Download this transcript
+          </a>
+        </Button>
+      </footer>
     </div>
   );
 }

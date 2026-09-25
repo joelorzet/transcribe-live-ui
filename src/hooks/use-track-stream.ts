@@ -30,6 +30,10 @@ function reduce(views: TrackViewMap, event: TrackEvent): TrackViewMap {
     return next;
   }
 
+  // The control room never subscribes per session, so the audience view event
+  // is not its concern.
+  if (event.kind === "session") return views;
+
   if (event.kind === "track") {
     const existing = views[event.track.id];
     return {

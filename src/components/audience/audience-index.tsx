@@ -54,20 +54,16 @@ export function AudienceIndex() {
               <div className="flex flex-wrap gap-2">
                 <Link
                   href={`/session/${track.id}`}
-                  className="hover:border-muted-foreground cursor-pointer rounded-lg border px-3 py-2 text-sm transition-colors"
+                  className="border-primary/50 bg-primary/10 text-primary hover:bg-primary/20 flex cursor-pointer items-center gap-1.5 rounded-lg border px-4 py-2 text-sm font-medium transition-colors"
                 >
-                  Original
+                  <Translate01 className="size-3.5" aria-hidden />
+                  Watch with subtitles
                 </Link>
-                {track.outputs.map((output) => (
-                  <Link
-                    key={output.language}
-                    href={`/session/${track.id}?lang=${output.language}`}
-                    className="border-primary/50 bg-primary/10 text-primary hover:bg-primary/20 flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-colors"
-                  >
-                    <Translate01 className="size-3.5" aria-hidden />
-                    {languageLabel(output.language as Language)}
-                  </Link>
-                ))}
+                <span className="text-muted-foreground self-center text-xs">
+                  {track.outputs.length > 0
+                    ? `${track.outputs.map((output) => languageLabel(output.language as Language)).join(", ")} available`
+                    : "subtitles starting"}
+                </span>
               </div>
             </Card>
           ))}

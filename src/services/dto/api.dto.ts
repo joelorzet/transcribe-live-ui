@@ -69,7 +69,8 @@ export interface TranscriptSegmentDto {
 }
 
 export type SessionEventDto =
-  | { type: "hello"; topic: string; sessions: SessionSnapshotDto[] }
+  | { type: "hello"; topic: string; sessions?: SessionSnapshotDto[]; session?: AudienceViewDto | null }
+  | { type: "session.view"; session: AudienceViewDto }
   | { type: "session.started"; session: SessionSnapshotDto }
   | { type: "session.stats"; session: SessionSnapshotDto }
   | { type: "session.ended"; session: SessionSnapshotDto }
@@ -145,4 +146,17 @@ export interface GlossaryDetailDto {
   name: string;
   description?: string;
   terms: GlossaryTermDto[];
+}
+
+export interface AudienceViewDto {
+  id: string;
+  title: string;
+  status: "starting" | "live" | "ended" | "error";
+  spokenLanguage: string;
+  languages: string[];
+  positionSeconds?: number;
+  captionLagMs: number;
+  hasAudio: boolean;
+  waitingForPublisher: boolean;
+  watchUrl?: string;
 }
